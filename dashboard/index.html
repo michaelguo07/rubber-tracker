@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rubber Tracker — Table Tennis Equipment Dashboard</title>
+  <meta name="description" content="Track table tennis rubber sheet wear and usage with real-time analytics, cumulative play-time charts, and anomaly detection." />
+  <meta name="theme-color" content="#0b0e1a" />
+
+  <!-- Google Fonts — Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Dashboard Stylesheet -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-container">
+
+    <!-- ====== Header ====== -->
+    <header class="header">
+      <div class="header__brand">
+        <span class="header__icon" aria-hidden="true">🏓</span>
+        <h1 class="header__title">Rubber Tracker</h1>
+      </div>
+      <div class="header__controls">
+        <select id="rubber-sheet-select" class="select-dark" aria-label="Select rubber sheet">
+          <option value="">Loading…</option>
+        </select>
+      </div>
+    </header>
+
+    <!-- Error banner -->
+    <div id="error-banner" class="error-banner" role="alert"></div>
+
+    <!-- ====== Stats Grid ====== -->
+    <section class="stats-grid" aria-label="Key statistics">
+      <!-- Blade Info (Wide Card) -->
+      <article class="glass-card stat-card stat-card--wide hidden" id="stat-blade">
+        <p class="stat-card__label" id="stat-blade-label">Blade: Loading…</p>
+        <p class="stat-card__value stat-card__value--accent" id="stat-blade-value">—</p>
+        <p class="stat-card__sub" id="stat-blade-sub">&nbsp;</p>
+      </article>
+
+      <article class="glass-card stat-card" id="stat-total-time">
+        <p class="stat-card__label">Total Play Time</p>
+        <p class="stat-card__value stat-card__value--accent" id="stat-total-time-value">—</p>
+        <p class="stat-card__sub" id="stat-total-time-sub">&nbsp;</p>
+      </article>
+      <article class="glass-card stat-card" id="stat-sessions">
+        <p class="stat-card__label">Sessions Logged</p>
+        <p class="stat-card__value" id="stat-sessions-value">—</p>
+        <p class="stat-card__sub" id="stat-sessions-sub">&nbsp;</p>
+      </article>
+      <article class="glass-card stat-card" id="stat-avg-session">
+        <p class="stat-card__label">Avg Session</p>
+        <p class="stat-card__value" id="stat-avg-session-value">—</p>
+        <p class="stat-card__sub">minutes per session</p>
+      </article>
+      <article class="glass-card stat-card" id="stat-days-install">
+        <p class="stat-card__label">Days Since Install</p>
+        <p class="stat-card__value" id="stat-days-install-value">—</p>
+        <p class="stat-card__sub" id="stat-days-install-sub">&nbsp;</p>
+      </article>
+      <article class="glass-card stat-card" id="stat-frequency">
+        <p class="stat-card__label">Play Frequency</p>
+        <p class="stat-card__value" id="stat-frequency-value">—</p>
+        <p class="stat-card__sub">sessions / week</p>
+      </article>
+      <article class="glass-card stat-card" id="stat-date-range">
+        <p class="stat-card__label">Date Range</p>
+        <p class="stat-card__value" id="stat-date-range-value" style="font-size:1.1rem;">—</p>
+        <p class="stat-card__sub" id="stat-date-range-sub">&nbsp;</p>
+      </article>
+    </section>
+
+    <!-- ====== Charts ====== -->
+    <section class="charts-grid" aria-label="Usage charts">
+      <article class="glass-card chart-card">
+        <h2 class="chart-card__title">Cumulative Play Time</h2>
+        <div class="chart-card__canvas-wrap">
+          <canvas id="chart-cumulative"></canvas>
+        </div>
+      </article>
+      <article class="glass-card chart-card">
+        <h2 class="chart-card__title">Session Duration</h2>
+        <div class="chart-card__canvas-wrap">
+          <canvas id="chart-sessions"></canvas>
+        </div>
+      </article>
+    </section>
+
+    <!-- ====== Anomalies ====== -->
+    <section id="anomalies-section" class="anomalies-section hidden" aria-label="Anomalies">
+      <h2 class="anomalies-section__title">⚠ Anomalies Detected</h2>
+      <div id="anomaly-list" class="anomaly-list"></div>
+    </section>
+
+    <!-- ====== Summary ====== -->
+    <section class="summary-section" aria-label="Summary">
+      <article class="glass-card summary-card">
+        <h2 class="summary-card__title">Summary</h2>
+        <p class="summary-card__text" id="summary-text">Loading analysis…</p>
+      </article>
+    </section>
+
+    <!-- ====== Settings ====== -->
+    <section class="settings-section" aria-label="Settings">
+      <article class="glass-card settings-card">
+        <h2 class="settings-card__title">⚙ Data Source</h2>
+        <div class="settings-row">
+          <input
+            type="url"
+            id="api-url-input"
+            class="input-dark"
+            placeholder="Apps Script API URL (leave blank for sample data)"
+          />
+          <button id="btn-save-api" class="btn btn--primary">Save &amp; Reload</button>
+          <button id="btn-clear-api" class="btn btn--ghost">Use Sample Data</button>
+        </div>
+      </article>
+    </section>
+
+  </div>
+
+  <!-- Application Module -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>

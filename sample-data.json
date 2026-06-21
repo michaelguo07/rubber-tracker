@@ -1,0 +1,25 @@
+{
+  "rubber_sheets": [
+    {
+      "id": "rs-fh-001",
+      "name": "Dignics 05 (FH)",
+      "installed_date": "2026-03-20",
+      "replaced_date": null
+    },
+    {
+      "id": "rs-bh-001",
+      "name": "Dignics 05 (BH)",
+      "installed_date": "2026-03-20",
+      "replaced_date": null
+    }
+  ],
+  "blades": [
+    {
+      "id": "b-001",
+      "name": "Butterfly Viscaria",
+      "installed_date": "2026-03-20",
+      "replaced_date": null
+    }
+  ],
+  "sessions": []
+}

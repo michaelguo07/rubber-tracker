@@ -1,0 +1,9 @@
+{
+  "name": "rubber-tracker",
+  "version": "1.0.0",
+  "description": "Table tennis rubber sheet usage tracker — dashboard and analysis",
+  "scripts": {
+    "dev": "npx -y live-server dashboard --port=3000 --no-browser"
+  },
+  "private": true
+}
