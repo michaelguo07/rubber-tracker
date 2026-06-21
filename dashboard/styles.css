@@ -7,18 +7,18 @@
 /* --- Custom Properties ------------------------------------- */
 :root {
   /* Backgrounds */
-  --bg-primary:    #0b0e1a;
-  --bg-secondary:  #111529;
-  --bg-card:       rgba(22, 28, 50, 0.65);
-  --bg-card-hover: rgba(30, 38, 68, 0.75);
-  --bg-glass:      rgba(255, 255, 255, 0.03);
+  --bg-primary:    #08090d;
+  --bg-secondary:  #0f1016;
+  --bg-card:       rgba(20, 22, 33, 0.65);
+  --bg-card-hover: rgba(28, 30, 43, 0.75);
+  --bg-glass:      rgba(255, 255, 255, 0.02);
 
-  /* Accent palette — teal / cyan / emerald */
-  --accent:        #14f0d5;
-  --accent-dim:    #0cbfa8;
-  --accent-glow:   rgba(20, 240, 213, 0.12);
-  --accent-glow-strong: rgba(20, 240, 213, 0.25);
-  --accent-gradient: linear-gradient(135deg, #14f0d5, #0891b2, #6366f1);
+  /* Accent palette — orange / UT Austin Burnt Orange / white */
+  --accent:        #ff6b00;
+  --accent-dim:    #d95200;
+  --accent-glow:   rgba(255, 107, 0, 0.08);
+  --accent-glow-strong: rgba(255, 107, 0, 0.25);
+  --accent-gradient: linear-gradient(135deg, #ff8c00 0%, #bf5700 100%);
 
   /* Semantic */
   --warning:       #f59e0b;
@@ -27,19 +27,19 @@
   --error:         #ef4444;
 
   /* Text */
-  --text-primary:  #eaf0ff;
-  --text-secondary:#8892b0;
-  --text-muted:    #505a78;
+  --text-primary:  #ffffff;
+  --text-secondary:#9ca3af;
+  --text-muted:    #4b5563;
 
   /* Borders */
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-card:   rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-card:   rgba(255, 255, 255, 0.09);
 
   /* Misc */
   --radius-sm:  8px;
   --radius-md:  14px;
   --radius-lg:  20px;
-  --shadow-card: 0 4px 30px rgba(0, 0, 0, 0.35);
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.5);
   --transition:  0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -69,9 +69,9 @@ body::before {
   inset: 0;
   z-index: -2;
   background:
-    radial-gradient(ellipse 80% 60% at 15% 20%, rgba(20, 240, 213, 0.06), transparent 50%),
-    radial-gradient(ellipse 60% 50% at 85% 75%, rgba(99, 102, 241, 0.07), transparent 50%),
-    radial-gradient(ellipse 70% 60% at 50% 10%, rgba(8, 145, 178, 0.05), transparent 50%);
+    radial-gradient(ellipse 80% 60% at 15% 20%, rgba(255, 107, 0, 0.05), transparent 50%),
+    radial-gradient(ellipse 60% 50% at 85% 75%, rgba(255, 255, 255, 0.03), transparent 50%),
+    radial-gradient(ellipse 70% 60% at 50% 10%, rgba(191, 87, 0, 0.04), transparent 50%);
   pointer-events: none;
 }
 
@@ -88,9 +88,144 @@ body::after {
 
 /* --- Layout Container -------------------------------------- */
 .app-container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 0 24px 60px;
+}
+
+/* --- Dashboard Grid Layout --------------------------------- */
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.dashboard-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.dashboard-main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* --- Bio Card ---------------------------------------------- */
+.bio-card {
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.bio-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(135deg, #bf5700 0%, #f1a153 100%); /* UT Austin Burnt Orange gradient */
+}
+
+.bio-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.bio-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #bf5700 0%, #f1a153 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+  box-shadow: 0 0 15px rgba(191, 87, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.bio-header-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.bio-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.usatt-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(20, 240, 213, 0.08);
+  border: 1px solid rgba(20, 240, 213, 0.2);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 12px;
+  width: fit-content;
+  margin-top: 4px;
+}
+
+.bio-sub {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.bio-desc {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.bio-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.bio-social-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition: color var(--transition), transform var(--transition);
+}
+
+.bio-social-link:hover {
+  color: var(--accent);
+  transform: translateX(3px);
+}
+
+.social-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+  transition: opacity var(--transition);
+}
+
+.bio-social-link:hover .social-icon {
+  opacity: 1;
 }
 
 /* --- Header / Navbar --------------------------------------- */
@@ -392,31 +527,35 @@ body::after {
 }
 
 /* --- Settings Section -------------------------------------- */
-.settings-section {
-  margin-top: 16px;
-}
-
 .settings-card {
-  padding: 26px 28px;
+  padding: 24px;
 }
 
 .settings-card__title {
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-secondary);
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
-.settings-row {
+.settings-column {
   display: flex;
+  flex-direction: column;
   gap: 12px;
-  align-items: stretch;
+}
+
+.settings-column .input-dark {
+  width: 100%;
+}
+
+.settings-column .btn {
+  width: 100%;
+  justify-content: center;
 }
 
 .input-dark {
-  flex: 1;
   appearance: none;
   background: rgba(255, 255, 255, 0.04);
   color: var(--text-primary);
@@ -497,6 +636,19 @@ body::after {
 .hidden { display: none !important; }
 
 /* --- Responsive -------------------------------------------- */
+@media (max-width: 1024px) {
+  .dashboard-layout {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .dashboard-sidebar {
+    order: 2;
+  }
+  .dashboard-main {
+    order: 1;
+  }
+}
+
 @media (max-width: 900px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -519,9 +671,6 @@ body::after {
   .header {
     flex-direction: column;
     align-items: flex-start;
-  }
-  .settings-row {
-    flex-direction: column;
   }
   .stat-card__value {
     font-size: 1.5rem;

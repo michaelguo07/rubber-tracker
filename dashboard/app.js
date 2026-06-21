@@ -221,9 +221,9 @@ function renderCumulativeChart(data) {
 
   // Gradient fill under line
   const gradient = ctx.createLinearGradient(0, 0, 0, canvas.parentElement.clientHeight || 300);
-  gradient.addColorStop(0, 'rgba(20, 240, 213, 0.30)');
-  gradient.addColorStop(0.6, 'rgba(20, 240, 213, 0.06)');
-  gradient.addColorStop(1, 'rgba(20, 240, 213, 0.00)');
+  gradient.addColorStop(0, 'rgba(255, 107, 0, 0.30)');
+  gradient.addColorStop(0.6, 'rgba(255, 107, 0, 0.06)');
+  gradient.addColorStop(1, 'rgba(255, 107, 0, 0.00)');
 
   cumulativeChart = new Chart(ctx, {
     type: 'line',
@@ -232,11 +232,11 @@ function renderCumulativeChart(data) {
       datasets: [{
         label: 'Cumulative Hours',
         data: data.map((d) => d.cumulative_hours),
-        borderColor: '#14f0d5',
+        borderColor: '#ff6b00',
         backgroundColor: gradient,
         borderWidth: 2.5,
-        pointBackgroundColor: '#14f0d5',
-        pointBorderColor: '#0b0e1a',
+        pointBackgroundColor: '#ff6b00',
+        pointBorderColor: '#08090d',
         pointBorderWidth: 2,
         pointRadius: 3,
         pointHoverRadius: 6,
@@ -259,8 +259,8 @@ function renderSessionChart(data) {
 
   // Per-bar gradient
   const gradient = ctx.createLinearGradient(0, 0, 0, canvas.parentElement.clientHeight || 300);
-  gradient.addColorStop(0, 'rgba(20, 240, 213, 0.85)');
-  gradient.addColorStop(1, 'rgba(99, 102, 241, 0.45)');
+  gradient.addColorStop(0, 'rgba(255, 107, 0, 0.85)');
+  gradient.addColorStop(1, 'rgba(255, 255, 255, 0.20)');
 
   sessionChart = new Chart(ctx, {
     type: 'bar',
@@ -270,7 +270,7 @@ function renderSessionChart(data) {
         label: 'Duration (min)',
         data: data.map((d) => d.duration_minutes),
         backgroundColor: gradient,
-        borderColor: 'rgba(20, 240, 213, 0.50)',
+        borderColor: 'rgba(255, 107, 0, 0.50)',
         borderWidth: 1,
         borderRadius: 6,
         borderSkipped: false,
@@ -299,10 +299,10 @@ function chartOptions(yLabel) {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: 'rgba(17, 21, 41, 0.92)',
-        titleColor: '#eaf0ff',
-        bodyColor: '#8892b0',
-        borderColor: 'rgba(20, 240, 213, 0.25)',
+        backgroundColor: 'rgba(14, 16, 22, 0.95)',
+        titleColor: '#ffffff',
+        bodyColor: '#9ca3af',
+        borderColor: 'rgba(255, 107, 0, 0.25)',
         borderWidth: 1,
         cornerRadius: 8,
         padding: 12,
