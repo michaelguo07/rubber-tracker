@@ -72,6 +72,44 @@ export function analyzeRubberUsage(data, rubberSheetId) {
     sessionsPerWeek,
   };
 
+  // --- Weekly stats (rolling last 7 days from the latest session date) ---------
+  let weeklyMinutes = 0;
+  let weeklyCalories = 0;
+  let weeklySteps = 0;
+  let weeklySessionsCount = 0;
+  let weeklyStartDate = "";
+  let weeklyEndDate = "";
+
+  if (filtered.length > 0) {
+    weeklyEndDate = filtered[filtered.length - 1].date;
+    const latestDate = new Date(weeklyEndDate + "T00:00:00");
+    const dayOfWeek = latestDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const lastSunday = new Date(latestDate.getTime() - dayOfWeek * 86_400_000);
+    weeklyStartDate = lastSunday.toISOString().slice(0, 10);
+
+    const weeklySessions = filtered.filter(
+      (s) => s.date >= weeklyStartDate && s.date <= weeklyEndDate
+    );
+
+    weeklyMinutes = weeklySessions.reduce((sum, s) => sum + (s.duration_minutes || 0), 0);
+    weeklyCalories = weeklySessions.reduce((sum, s) => sum + (Number(s.calories) || 0), 0);
+    weeklySteps = weeklySessions.reduce((sum, s) => sum + (Number(s.steps) || 0), 0);
+    weeklySessionsCount = weeklySessions.length;
+  }
+
+  const weeklyStats = {
+    playTime: {
+      hours: Math.floor(weeklyMinutes / 60),
+      minutes: weeklyMinutes % 60,
+      totalMinutes: weeklyMinutes
+    },
+    calories: weeklyCalories,
+    steps: weeklySteps,
+    sessionsCount: weeklySessionsCount,
+    startDate: weeklyStartDate,
+    endDate: weeklyEndDate
+  };
+
   // --- Chart data -------------------------------------------------------------
   let cumulativeMinutes = 0;
   const cumulative_chart = filtered.map((s) => {
@@ -195,7 +233,7 @@ export function analyzeRubberUsage(data, rubberSheetId) {
     };
   }
 
-  return { keyStats, chartData, priorSheet, anomalies, summary, bladeStats };
+  return { keyStats, weeklyStats, chartData, priorSheet, anomalies, summary, bladeStats };
 }
 
 // ---------------------------------------------------------------------------

@@ -16,11 +16,13 @@ const elAnomalyList    = document.getElementById('anomaly-list');
 const elSummaryText    = document.getElementById('summary-text');
 const elApiUrlInput    = document.getElementById('api-url-input');
 const elBtnSaveApi     = document.getElementById('btn-save-api');
-const elBtnClearApi    = document.getElementById('btn-clear-api');
+const elHRZoneBars      = document.getElementById('hr-zone-bars');
+const elHRZoneTotal     = document.getElementById('hr-zone-total');
 
 // Chart instances (so we can destroy before re-rendering)
 let cumulativeChart = null;
 let sessionChart    = null;
+let hrChart         = null;
 
 // Current loaded data
 let appData = null;
@@ -50,12 +52,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     await loadData();
   });
-
-  elBtnClearApi.addEventListener('click', async () => {
-    elApiUrlInput.value = '';
-    localStorage.removeItem('rubber_tracker_api_url');
-    await loadData();
-  });
 });
 
 // ---------------------------------------------------------------------------
@@ -63,6 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ---------------------------------------------------------------------------
 async function loadData() {
   hideError();
+  showLoader();
   try {
     const apiUrl = localStorage.getItem('rubber_tracker_api_url');
     const url = apiUrl || '../sample-data.json';
@@ -73,7 +70,19 @@ async function loadData() {
     renderAll(appData, elSheetSelect.value || undefined);
   } catch (err) {
     showError(`Failed to load data: ${err.message}`);
+  } finally {
+    hideLoader();
   }
+}
+
+function showLoader() {
+  const loader = document.getElementById('loading-overlay');
+  if (loader) loader.classList.remove('hidden');
+}
+
+function hideLoader() {
+  const loader = document.getElementById('loading-overlay');
+  if (loader) loader.classList.add('hidden');
 }
 
 // ---------------------------------------------------------------------------
@@ -89,11 +98,12 @@ function renderAll(data, sheetId) {
   hideEmptyState();
 
   const result = analyzeRubberUsage(data, sheetId);
-  renderStats(result.keyStats, result.priorSheet, result.bladeStats);
+  renderStats(result.keyStats, result.priorSheet, result.bladeStats, result.weeklyStats);
   renderCumulativeChart(result.chartData.cumulative_chart);
   renderSessionChart(result.chartData.session_chart);
   renderAnomalies(result.anomalies);
   elSummaryText.textContent = result.summary;
+  renderHeartRate(data.heart_rate_sessions || [], data.sessions || []);
 }
 
 // ---------------------------------------------------------------------------
@@ -101,10 +111,28 @@ function renderAll(data, sheetId) {
 // ---------------------------------------------------------------------------
 function populateSheetSelector(sheets) {
   elSheetSelect.innerHTML = '';
-  sheets.forEach((s) => {
+  sheets.forEach((s, index) => {
     const opt = document.createElement('option');
     opt.value = s.id;
-    const status = s.replaced_date === null ? '● Active' : `Replaced ${s.replaced_date}`;
+
+    // Resolve replacement date
+    let resolvedDate = s.replaced_date;
+    if (resolvedDate === 'replaced' || resolvedDate === '' || resolvedDate === null) {
+      const isFH = s.name.includes('(FH)') || s.name.toLowerCase().includes('fh');
+      const isBH = s.name.includes('(BH)') || s.name.toLowerCase().includes('bh');
+      for (let i = index + 1; i < sheets.length; i++) {
+        const nextSheet = sheets[i];
+        const nextIsFH = nextSheet.name.includes('(FH)') || nextSheet.name.toLowerCase().includes('fh');
+        const nextIsBH = nextSheet.name.includes('(BH)') || nextSheet.name.toLowerCase().includes('bh');
+        if ((isFH && nextIsFH) || (isBH && nextIsBH)) {
+          resolvedDate = nextSheet.installed_date;
+          break;
+        }
+      }
+    }
+
+    const isActive = (s.replaced_date === null) && (resolvedDate === s.replaced_date);
+    const status = isActive ? '● Active' : `Replaced ${formatDate(resolvedDate)}`;
     opt.textContent = `${s.name}  (${status})`;
     elSheetSelect.appendChild(opt);
   });
@@ -116,7 +144,7 @@ function populateSheetSelector(sheets) {
 // ---------------------------------------------------------------------------
 // Stats rendering with animated counters
 // ---------------------------------------------------------------------------
-function renderStats(stats, priorSheet, bladeStats) {
+function renderStats(stats, priorSheet, bladeStats, weeklyStats) {
   // Blade play time
   const elBladeCard = document.getElementById('stat-blade');
   if (bladeStats) {
@@ -182,6 +210,31 @@ function renderStats(stats, priorSheet, bladeStats) {
     `${formatDate(stats.dateRange.first)} → ${formatDate(stats.dateRange.last)}`;
   const spanDays = daysBetween(stats.dateRange.first, stats.dateRange.last);
   document.getElementById('stat-date-range-sub').textContent = `${spanDays} days span`;
+
+  // Weekly stats
+  if (weeklyStats) {
+    animateValue('stat-weekly-time-value',
+      `${weeklyStats.playTime.hours}h ${weeklyStats.playTime.minutes}m`,
+      weeklyStats.playTime.hours * 60 + weeklyStats.playTime.minutes,
+      (v) => `${Math.floor(v / 60)}h ${Math.round(v % 60)}m`
+    );
+    const rangeText = weeklyStats.startDate ? `Sunday, ${formatDate(weeklyStats.startDate)} → ${formatDate(weeklyStats.endDate)}` : 'No data';
+    document.getElementById('stat-weekly-time-sub').textContent = rangeText;
+
+    animateValue('stat-weekly-calories-value',
+      `${weeklyStats.calories} kcal`,
+      weeklyStats.calories,
+      (v) => `${Math.round(v)} kcal`
+    );
+    document.getElementById('stat-weekly-calories-sub').textContent = rangeText;
+
+    animateValue('stat-weekly-steps-value',
+      weeklyStats.steps.toLocaleString(),
+      weeklyStats.steps,
+      (v) => Math.round(v).toLocaleString()
+    );
+    document.getElementById('stat-weekly-steps-sub').textContent = rangeText;
+  }
 }
 
 function animateValue(elementId, _finalText, targetNumber, formatter, duration = 800) {
@@ -374,6 +427,282 @@ function renderAnomalies(anomalies) {
 }
 
 // ---------------------------------------------------------------------------
+// Heart Rate Zones
+// ---------------------------------------------------------------------------
+
+/** Zone metadata for display. */
+const HR_ZONE_META = [
+  { zone: 1, name: 'Light',    color: '#3b82f6', pctRange: '<50%' },
+  { zone: 2, name: 'Moderate', color: '#22c55e', pctRange: '50–69%' },
+  { zone: 4, name: 'Vigorous', color: '#f97316', pctRange: '70–84%' },
+  { zone: 5, name: 'Peak',     color: '#ef4444', pctRange: '85%+' },
+];
+
+/**
+ * Populates the HR session selector and sets up event handling.
+ */
+function renderHeartRate(hrSessions, allSessions) {
+  const selectEl = document.getElementById('hr-session-select');
+  if (!selectEl) return;
+
+  selectEl.innerHTML = '<option value="">Select a session\u2026</option>';
+
+  if (!hrSessions || hrSessions.length === 0) {
+    selectEl.innerHTML = '<option value="">No heart rate data yet</option>';
+    showHREmpty();
+    return;
+  }
+
+  // Sort by date descending (most recent first) for dropdown selection.
+  const sorted = [...hrSessions].sort((a, b) => (a.date > b.date ? -1 : a.date < b.date ? 1 : 0));
+
+  sorted.forEach((hr, i) => {
+    const opt = document.createElement('option');
+    opt.value = String(i);
+
+    // Calculate total session minutes from start/end times if available
+    let sessionMins = 0;
+    if (hr.start_time && hr.end_time) {
+      const start = new Date(hr.start_time);
+      const end = new Date(hr.end_time);
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        sessionMins = Math.round((end - start) / 60000);
+      }
+    }
+    if (sessionMins <= 0) {
+      sessionMins = (Number(hr.zone1_mins) || 0) +
+                    (Number(hr.zone2_mins) || 0) +
+                    (Number(hr.zone3_mins) || 0) +
+                    (Number(hr.zone4_mins) || 0);
+    }
+
+    const durLabel = sessionMins > 0 ? ` (${sessionMins} min)` : '';
+    opt.textContent = `${formatDate(hr.date)}${durLabel} \u2014 Avg ${hr.avg_bpm} bpm`;
+    selectEl.appendChild(opt);
+  });
+
+  // Render trend chart for all sessions
+  renderHRTrendChart(hrSessions);
+
+  // Remove old listener by replacing node
+  const newSelect = selectEl.cloneNode(true);
+  selectEl.parentNode.replaceChild(newSelect, selectEl);
+  const selectRef = document.getElementById('hr-session-select');
+
+  selectRef.addEventListener('change', () => {
+    const idx = selectRef.value;
+    if (idx === '') {
+      showHREmpty();
+      return;
+    }
+    renderHRSession(sorted[parseInt(idx, 10)], allSessions);
+  });
+
+  // Auto-select the most recent session.
+  selectRef.value = '0';
+  renderHRSession(sorted[0], allSessions);
+}
+
+/**
+ * Renders heart rate data for a single session.
+ */
+function renderHRSession(hr, allSessions) {
+  hideHREmpty();
+
+  animateValue('hr-avg-bpm', String(hr.avg_bpm), hr.avg_bpm, v => String(Math.round(v)));
+  animateValue('hr-max-bpm', String(hr.max_bpm), hr.max_bpm, v => String(Math.round(v)));
+  animateValue('hr-min-bpm', String(hr.min_bpm), hr.min_bpm, v => String(Math.round(v)));
+
+  // Find matching exercise session to display calories and steps
+  const totalMins = (Number(hr.zone1_mins) || 0) +
+                    (Number(hr.zone2_mins) || 0) +
+                    (Number(hr.zone3_mins) || 0) +
+                    (Number(hr.zone4_mins) || 0);
+
+  const sessionMatch = allSessions.find(s => 
+    s.start_time === hr.start_time || 
+    (s.date === hr.date && Math.abs(s.duration_minutes - totalMins) < 5)
+  );
+
+  const calories = sessionMatch ? Number(sessionMatch.calories) || 0 : 0;
+  const steps = sessionMatch ? Number(sessionMatch.steps) || 0 : 0;
+
+  animateValue('hr-calories', String(calories), calories, v => v > 0 ? `${Math.round(v)} kcal` : '—');
+  animateValue('hr-steps', String(steps), steps, v => v > 0 ? Math.round(v).toLocaleString() : '—');
+
+  renderZoneBars(hr);
+}
+
+/**
+ * Renders the zone breakdown horizontal bars.
+ */
+function renderZoneBars(hr) {
+  const zoneMinutes = [
+    Number(hr.zone1_mins) || 0,
+    Number(hr.zone2_mins) || 0,
+    Number(hr.zone3_mins) || 0,
+    Number(hr.zone4_mins) || 0,
+  ];
+
+  const totalMins = zoneMinutes.reduce((a, b) => a + b, 0);
+  const maxMins = Math.max(...zoneMinutes, 1);
+
+  elHRZoneBars.innerHTML = '';
+
+  HR_ZONE_META.forEach((meta, i) => {
+    const mins = zoneMinutes[i];
+    const pct = totalMins > 0 ? (mins / maxMins) * 100 : 0;
+
+    const row = document.createElement('div');
+    row.className = `hr-zone-row hr-zone--${meta.zone}`;
+    row.innerHTML = `
+      <div class="hr-zone-row__label">
+        <span class="hr-zone-row__dot"></span>
+        ${meta.name}
+      </div>
+      <div class="hr-zone-row__bar-track">
+        <div class="hr-zone-row__bar-fill" style="width: 0%"></div>
+      </div>
+      <span class="hr-zone-row__minutes">${mins} min</span>
+    `;
+    elHRZoneBars.appendChild(row);
+
+    // Animate bar width after a brief delay for each bar.
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const fill = row.querySelector('.hr-zone-row__bar-fill');
+        if (fill) fill.style.width = pct + '%';
+      }, 80 * i);
+    });
+  });
+
+  elHRZoneTotal.textContent = `Total tracked time: ${totalMins} min`;
+}
+
+/**
+ * Renders a Line Chart showing average and max HR trend over time.
+ */
+function renderHRTrendChart(hrSessions) {
+  const canvas = document.getElementById('chart-hr-trend');
+  if (!canvas) return;
+  if (hrChart) hrChart.destroy();
+
+  const ctx = canvas.getContext('2d');
+
+  // Sort chronologically (oldest first)
+  const sorted = [...hrSessions].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+
+  hrChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: sorted.map((d) => formatDate(d.date)),
+      datasets: [
+        {
+          label: 'Avg BPM',
+          data: sorted.map((d) => Number(d.avg_bpm) || null),
+          borderColor: '#f97316', // Orange
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointBackgroundColor: '#f97316',
+          pointBorderColor: '#0b0e1a',
+          pointBorderWidth: 1.5,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          tension: 0.3,
+        },
+        {
+          label: 'Max BPM',
+          data: sorted.map((d) => Number(d.max_bpm) || null),
+          borderColor: '#ef4444', // Red
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointBackgroundColor: '#ef4444',
+          pointBorderColor: '#0b0e1a',
+          pointBorderWidth: 1.5,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          tension: 0.3,
+        }
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: {
+            color: '#8b95b0',
+            font: { family: 'Inter', size: 10, weight: '500' }
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(14, 16, 22, 0.95)',
+          titleColor: '#ffffff',
+          bodyColor: '#9ca3af',
+          borderColor: 'rgba(255, 107, 0, 0.25)',
+          borderWidth: 1,
+          cornerRadius: 8,
+          padding: 12,
+          titleFont: { family: 'Inter', weight: '600' },
+          bodyFont: { family: 'Inter' }
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: '#505a78',
+            font: { family: 'Inter', size: 9 }
+          },
+          grid: { display: false }
+        },
+        y: {
+          ticks: {
+            color: '#505a78',
+            font: { family: 'Inter', size: 9 }
+          },
+          grid: { color: 'rgba(80, 90, 120, 0.08)' },
+          title: {
+            display: true,
+            text: 'BPM',
+            color: '#8b95b0',
+            font: { family: 'Inter', size: 9, weight: '500' }
+          }
+        }
+      }
+    }
+  });
+}
+
+function showHREmpty() {
+  const emptyEl = document.getElementById('hr-empty-state');
+  const statsRow = document.getElementById('hr-stats-row');
+  const zonesCard = document.getElementById('hr-zones-card');
+  const chartCard = document.getElementById('hr-chart-card');
+  if (emptyEl)  emptyEl.classList.remove('hidden');
+  if (statsRow) statsRow.style.display = 'none';
+  if (zonesCard) zonesCard.style.display = 'none';
+  if (chartCard) chartCard.style.display = 'none';
+  if (hrChart) { hrChart.destroy(); hrChart = null; }
+}
+
+function hideHREmpty() {
+  const emptyEl = document.getElementById('hr-empty-state');
+  const statsRow = document.getElementById('hr-stats-row');
+  const zonesCard = document.getElementById('hr-zones-card');
+  const chartCard = document.getElementById('hr-chart-card');
+  if (emptyEl)  emptyEl.classList.add('hidden');
+  if (statsRow) statsRow.style.display = '';
+  if (zonesCard) zonesCard.style.display = '';
+  if (chartCard) chartCard.style.display = '';
+}
+
+// ---------------------------------------------------------------------------
 // Error handling
 // ---------------------------------------------------------------------------
 function showError(msg) {
@@ -410,6 +739,9 @@ function showEmptyState() {
 
   // Hide anomalies
   elAnomaliesWrap.classList.add('hidden');
+
+  // Clear HR section
+  showHREmpty();
 }
 
 function hideEmptyState() {

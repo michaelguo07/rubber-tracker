@@ -71,6 +71,27 @@ const TAB_LOGS          = 'Logs';
 const HEALTH_API_BASE = 'https://health.googleapis.com/v4';
 const EXERCISE_ENDPOINT = HEALTH_API_BASE + '/users/me/dataTypes/exercise/dataPoints';
 
+/** Heart rate data endpoint. */
+const HEART_RATE_ENDPOINT = HEALTH_API_BASE + '/users/me/dataTypes/heart-rate/dataPoints';
+
+/** New sheet tab for heart rate data. */
+const TAB_HEART_RATE = 'Heart Rate';
+
+/** Default athlete age for HR zone calculation (220 - age = max HR). */
+const DEFAULT_ATHLETE_AGE = 18;
+
+/**
+ * Heart rate zone definitions (percentage of max HR).
+ * Standard 5-zone model used by Fitbit / Google Health.
+ */
+const HR_ZONES = [
+  { zone: 1, name: 'Light',    minPct: 0.50, maxPct: 0.60 },
+  { zone: 2, name: 'Moderate', minPct: 0.60, maxPct: 0.70 },
+  { zone: 3, name: 'Hard',     minPct: 0.70, maxPct: 0.80 },
+  { zone: 4, name: 'Vigorous', minPct: 0.80, maxPct: 0.90 },
+  { zone: 5, name: 'Peak',     minPct: 0.90, maxPct: 1.00 },
+];
+
 /**
  * Exercise type strings for table tennis in Google Health API.
  * Fitbit reports: "TABLE_TENNIS" (uppercase).
@@ -114,7 +135,10 @@ function getHealthService() {
     .setClientSecret(clientSecret)
     .setCallbackFunction(OAUTH_CALLBACK_NAME)
     .setPropertyStore(PropertiesService.getUserProperties())
-    .setScope('https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly')
+    .setScope([
+      'https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly',
+      'https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly'
+    ].join(' '))
     .setParam('access_type', 'offline')
     .setParam('prompt', 'consent');   // Force refresh token on first auth
 }
@@ -213,6 +237,19 @@ function ensureTab(ss, name, headers) {
     sheet.appendRow(headers);
     sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
     Logger.log('Created tab: ' + name);
+  } else {
+    // Check if any headers are missing in the existing tab and append them dynamically
+    const lastCol = sheet.getLastColumn();
+    if (lastCol > 0) {
+      const existingHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+      const missingHeaders = headers.filter(h => existingHeaders.indexOf(h) === -1);
+      if (missingHeaders.length > 0) {
+        sheet.getRange(1, lastCol + 1, 1, missingHeaders.length)
+             .setValues([missingHeaders])
+             .setFontWeight('bold');
+        Logger.log('Added missing headers to ' + name + ': ' + missingHeaders.join(', '));
+      }
+    }
   }
 
   return sheet;
@@ -231,7 +268,7 @@ function ensureTab(ss, name, headers) {
 function setupSheet() {
   const ss = getSpreadsheet();
 
-  ensureTab(ss, TAB_SESSIONS,      ['date', 'activity_type', 'duration_minutes', 'source', 'synced_at']);
+  ensureTab(ss, TAB_SESSIONS,      ['date', 'activity_type', 'duration_minutes', 'source', 'synced_at', 'calories', 'steps']);
   ensureTab(ss, TAB_LOGS,          ['timestamp', 'type', 'message']);
 
   // Rubber Sheets tab — pre-populate with Dignics 05 (FH) and (BH) if newly created.
@@ -255,6 +292,19 @@ function setupSheet() {
     Logger.log('Created tab: ' + TAB_BLADES + ' with Butterfly Viscaria');
   }
 
+  // Heart Rate tab — stores per-session heart rate summaries.
+  let hrSheet = ss.getSheetByName(TAB_HEART_RATE);
+  if (!hrSheet) {
+    hrSheet = ss.insertSheet(TAB_HEART_RATE);
+    hrSheet.appendRow([
+      'date', 'avg_bpm', 'max_bpm', 'min_bpm',
+      'zone1_mins', 'zone2_mins', 'zone3_mins', 'zone4_mins', 'zone5_mins',
+      'start_time', 'end_time'
+    ]);
+    hrSheet.getRange(1, 1, 1, 11).setFontWeight('bold');
+    Logger.log('Created tab: ' + TAB_HEART_RATE);
+  }
+
   // Config tab has a special layout: A1 = label, B1 = value.
   let configSheet = ss.getSheetByName(TAB_CONFIG);
   if (!configSheet) {
@@ -263,7 +313,16 @@ function setupSheet() {
     // Default: sync from the rubber install date so first run pulls all history.
     configSheet.getRange('B1').setValue('2026-03-20T00:00:00Z');
     configSheet.getRange('A1').setFontWeight('bold');
+    // Athlete age for HR zone calculation.
+    configSheet.getRange('A2').setValue('athlete_age');
+    configSheet.getRange('B2').setValue(DEFAULT_ATHLETE_AGE);
     Logger.log('Created tab: ' + TAB_CONFIG + ' (sync from install date: 2026-03-20)');
+  } else {
+    // Proactively populate the age key/value if it's missing in an existing tab.
+    if (!configSheet.getRange('A2').getValue()) {
+      configSheet.getRange('A2').setValue('athlete_age');
+      configSheet.getRange('B2').setValue(DEFAULT_ATHLETE_AGE);
+    }
   }
 
   Logger.log('Sheet setup complete.');
@@ -391,6 +450,23 @@ function setLastSyncTimestamp(ss, timestamp) {
 }
 
 
+/**
+ * Reads the athlete age from the Config tab (cell B2).
+ * Returns DEFAULT_ATHLETE_AGE if missing or invalid.
+ *
+ * @param  {Spreadsheet} ss
+ * @return {number}
+ */
+function getAthleteAge(ss) {
+  const configSheet = getTab(ss, TAB_CONFIG);
+  if (!configSheet) return DEFAULT_ATHLETE_AGE;
+
+  const raw = configSheet.getRange('B2').getValue();
+  const age = parseInt(raw, 10);
+  return (age > 0 && age < 120) ? age : DEFAULT_ATHLETE_AGE;
+}
+
+
 // ─────────────────────────────────────────────────────────────────────────────
 //  API FETCH — GOOGLE HEALTH API v4
 // ─────────────────────────────────────────────────────────────────────────────
@@ -475,12 +551,20 @@ function fetchSessionsFromAPI(service, since) {
 
       if (durMins <= 0) continue;
 
+      const metrics = exercise.metricsSummary || {};
+      const calories = Number(metrics.caloriesKcal || exercise.caloriesKcal || exercise.calories_kcal || exercise.calories || 0);
+      const steps = Number(metrics.steps || exercise.steps || exercise.step_count || 0);
+
       allSessions.push({
         date:             Utilities.formatDate(startDate, Session.getScriptTimeZone(), 'yyyy-MM-dd'),
         activity_type:    'table_tennis',
         duration_minutes: durMins,
         source:           'Google Health / Fitbit',
-        synced_at:        new Date().toISOString()
+        synced_at:        new Date().toISOString(),
+        start_time:       startTimeStr,
+        end_time:         endTimeStr,
+        calories:         calories,
+        steps:            steps
       });
     }
 
@@ -488,6 +572,124 @@ function fetchSessionsFromAPI(service, since) {
   } while (nextPageToken);
 
   return allSessions;
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  API FETCH — HEART RATE DATA
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Fetches heart rate data points for a specific time window from
+ * the Google Health API v4.
+ *
+ * @param  {OAuth2.Service} service   Authorized OAuth2 service.
+ * @param  {string}         startTime ISO 8601 start time of the session.
+ * @param  {string}         endTime   ISO 8601 end time of the session.
+ * @return {Object[]}       Array of { timestamp, bpm } objects.
+ */
+function fetchHeartRateDataPoints(service, startTime, endTime) {
+  const token = service.getAccessToken();
+
+  // Filter HR data points within the exercise session window.
+  // Note: Google Health API v4 represents heart rate as a "Sample" kind,
+  // which filters on sample_time.physical_time instead of interval fields.
+  const filter = 'heart_rate.sample_time.physical_time >= "' + startTime + '"' +
+                 ' AND heart_rate.sample_time.physical_time < "' + endTime + '"';
+
+  const url = HEART_RATE_ENDPOINT
+    + '?filter=' + encodeURIComponent(filter)
+    + '&pageSize=100';
+
+  const allPoints = [];
+  let nextPageToken = null;
+
+  do {
+    let fetchUrl = url;
+    if (nextPageToken) {
+      fetchUrl += '&pageToken=' + encodeURIComponent(nextPageToken);
+    }
+
+    const response = UrlFetchApp.fetch(fetchUrl, {
+      method: 'get',
+      headers: { Authorization: 'Bearer ' + token },
+      muteHttpExceptions: true
+    });
+
+    const code = response.getResponseCode();
+
+    if (code !== 200) {
+      Logger.log('Heart rate API returned HTTP ' + code + ': ' +
+                 response.getContentText().substring(0, 300));
+      return [];   // Return empty — don't block sync for HR failures.
+    }
+
+    const data = JSON.parse(response.getContentText());
+    const dataPoints = data.dataPoints || [];
+
+    for (const dp of dataPoints) {
+      const hr = dp.heartRate || dp.heart_rate;
+      if (!hr) continue;
+
+      // Google Health API v4 represents heart rate value using beatsPerMinute
+      // and time using sampleTime.physicalTime. We handle multiple cases for resilience.
+      const bpm = hr.beatsPerMinute || hr.beats_per_minute || hr.bpm || hr.value;
+      const sampleTime = hr.sampleTime || hr.sample_time || {};
+      const interval = hr.interval || dp.interval || {};
+      const timestamp = sampleTime.physicalTime || sampleTime.physical_time || interval.startTime || interval.start_time || hr.timestamp || '';
+
+      if (bpm && bpm > 0) {
+        allPoints.push({ timestamp: timestamp, bpm: Number(bpm) });
+      }
+    }
+
+    nextPageToken = data.nextPageToken || null;
+  } while (nextPageToken);
+
+  return allPoints;
+}
+
+/**
+ * Computes heart rate summary stats and zone breakdown from raw HR data points.
+ *
+ * @param  {Object[]} hrPoints   Array of { timestamp, bpm }.
+ * @param  {number}   athleteAge Age of the athlete (for max HR calculation).
+ * @param  {number}   sessionMins Total session duration in minutes.
+ * @return {Object}   { avgBpm, maxBpm, minBpm, zones: { zone1_mins, ..., zone5_mins } }
+ */
+function computeHRSummary(hrPoints, athleteAge, sessionMins) {
+  if (!hrPoints || hrPoints.length === 0) {
+    return null;
+  }
+
+  const maxHR = 220 - athleteAge;
+  const bpmValues = hrPoints.map(p => p.bpm);
+
+  const avgBpm = Math.round(bpmValues.reduce((a, b) => a + b, 0) / bpmValues.length);
+  const maxBpm = Math.max(...bpmValues);
+  const minBpm = Math.min(...bpmValues);
+
+  // Count data points in each zone, then convert to proportional minutes.
+  const zoneCounts = [0, 0, 0, 0, 0];
+  const totalPoints = bpmValues.length;
+
+  for (const bpm of bpmValues) {
+    const pct = bpm / maxHR;
+
+    if (pct >= 0.85)      zoneCounts[3]++; // Peak (mapped to zone4_mins)
+    else if (pct >= 0.70) zoneCounts[2]++; // Vigorous (mapped to zone3_mins)
+    else if (pct >= 0.50) zoneCounts[1]++; // Moderate (mapped to zone2_mins)
+    else                  zoneCounts[0]++; // Light (mapped to zone1_mins)
+  }
+
+  // Convert point counts to proportional minutes of the total session.
+  const zones = {};
+  for (let i = 0; i < 5; i++) {
+    const proportion = totalPoints > 0 ? zoneCounts[i] / totalPoints : 0;
+    zones['zone' + (i + 1) + '_mins'] = Math.round(proportion * sessionMins);
+  }
+
+  return { avgBpm, maxBpm, minBpm, zones };
 }
 
 
@@ -609,7 +811,9 @@ function syncSessions() {
       s.activity_type,
       s.duration_minutes,
       s.source,
-      s.synced_at
+      s.synced_at,
+      s.calories || 0,
+      s.steps || 0
     ]);
 
     sessionsSheet.getRange(
@@ -618,6 +822,50 @@ function syncSessions() {
       rows.length,
       rows[0].length
     ).setValues(rows);
+
+    // ── Step 7b: Fetch heart rate data for new sessions ───────────────────
+    const hrSheet = getTab(ss, TAB_HEART_RATE);
+    if (hrSheet) {
+      const athleteAge = getAthleteAge(ss);
+      let hrCount = 0;
+
+      for (const session of newSessions) {
+        try {
+          const start = session.start_time || (session.date + 'T00:00:00Z');
+          const end   = session.end_time || (session.date + 'T23:59:59Z');
+
+          const hrPoints = fetchHeartRateDataPoints(service, start, end);
+
+          if (hrPoints.length === 0) {
+            appendLog(ss, 'INFO', 'No HR data found for session on ' + session.date);
+            continue;
+          }
+
+          const summary = computeHRSummary(hrPoints, athleteAge, session.duration_minutes);
+
+          if (summary) {
+            hrSheet.appendRow([
+              session.date,
+              summary.avgBpm,
+              summary.maxBpm,
+              summary.minBpm,
+              summary.zones.zone1_mins,
+              summary.zones.zone2_mins,
+              summary.zones.zone3_mins,
+              summary.zones.zone4_mins,
+              summary.zones.zone5_mins,
+              start,
+              end
+            ]);
+            hrCount++;
+          }
+        } catch (hrErr) {
+          appendLog(ss, 'WARN', 'HR fetch failed for ' + session.date + ': ' + hrErr.message);
+        }
+      }
+
+      appendLog(ss, 'INFO', 'Heart rate data written for ' + hrCount + '/' + newSessions.length + ' session(s).');
+    }
 
     // ── Step 8: Update checkpoint ────────────────────────────────────────
     setLastSyncTimestamp(ss, new Date());
@@ -669,9 +917,10 @@ function doGet(e) {
     }
 
     const payload = {
-      rubber_sheets: readTabAsObjects(ss, TAB_RUBBER_SHEETS),
-      blades:        readTabAsObjects(ss, TAB_BLADES),
-      sessions:      readTabAsObjects(ss, TAB_SESSIONS)
+      rubber_sheets:       readTabAsObjects(ss, TAB_RUBBER_SHEETS),
+      blades:              readTabAsObjects(ss, TAB_BLADES),
+      sessions:            readTabAsObjects(ss, TAB_SESSIONS),
+      heart_rate_sessions: readTabAsObjects(ss, TAB_HEART_RATE)
     };
 
     return ContentService
@@ -782,4 +1031,181 @@ function debugListSessions() {
     Logger.log('No exercise data points found in the last 90 days.');
     Logger.log('Raw response: ' + response.getContentText().substring(0, 2000));
   }
+}
+
+
+/**
+ * DEBUG: Fetch and log heart rate data for the most recent day
+ * with a table tennis session.
+ *
+ * Run this from the Apps Script editor to verify HR data access.
+ */
+function debugHeartRate() {
+  const service = getHealthService();
+
+  if (!service.hasAccess()) {
+    Logger.log('Not authorized. Run showAuthUrl() to get the auth URL.');
+    return;
+  }
+
+  const ss = getSpreadsheet();
+  const sessionsSheet = getTab(ss, TAB_SESSIONS);
+
+  if (!sessionsSheet || sessionsSheet.getLastRow() < 2) {
+    Logger.log('No sessions found. Run syncSessions() first.');
+    return;
+  }
+
+  // Get the most recent session date.
+  const lastRow = sessionsSheet.getLastRow();
+  const lastDate = sessionsSheet.getRange(lastRow, 1).getValue();
+  let dateStr;
+  if (lastDate instanceof Date) {
+    dateStr = Utilities.formatDate(lastDate, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  } else {
+    dateStr = String(lastDate);
+  }
+
+  Logger.log('Fetching heart rate data for: ' + dateStr);
+
+  const dayStart = dateStr + 'T00:00:00Z';
+  const dayEnd   = dateStr + 'T23:59:59Z';
+
+  const hrPoints = fetchHeartRateDataPoints(service, dayStart, dayEnd);
+
+  Logger.log('Total HR data points found: ' + hrPoints.length);
+
+  if (hrPoints.length > 0) {
+    // Log first 10 points.
+    Logger.log('First 10 data points:');
+    hrPoints.slice(0, 10).forEach(function(p, i) {
+      Logger.log('  ' + (i + 1) + '. ' + p.timestamp + ' → ' + p.bpm + ' bpm');
+    });
+
+    // Compute and log summary.
+    const athleteAge = getAthleteAge(ss);
+    const sessionDuration = sessionsSheet.getRange(lastRow, 3).getValue();
+    const summary = computeHRSummary(hrPoints, athleteAge, sessionDuration);
+
+    Logger.log('\n--- HR Summary ---');
+    Logger.log('Avg BPM: ' + summary.avgBpm);
+    Logger.log('Max BPM: ' + summary.maxBpm);
+    Logger.log('Min BPM: ' + summary.minBpm);
+    Logger.log('Zone 1 (Light):    ' + summary.zones.zone1_mins + ' min');
+    Logger.log('Zone 2 (Moderate): ' + summary.zones.zone2_mins + ' min');
+    Logger.log('Zone 3 (Hard):     ' + summary.zones.zone3_mins + ' min');
+    Logger.log('Zone 4 (Vigorous): ' + summary.zones.zone4_mins + ' min');
+    Logger.log('Zone 5 (Peak):     ' + summary.zones.zone5_mins + ' min');
+    Logger.log('Max HR used: ' + (220 - athleteAge) + ' bpm (age: ' + athleteAge + ')');
+  } else {
+    Logger.log('No heart rate data found for this day.');
+    Logger.log('Make sure a HR-capable device was worn during the session.');
+  }
+}
+
+/**
+ * Backfill heart rate data for all existing sessions that don't
+ * already have HR data in the Heart Rate tab.
+ */
+function backfillHeartRate() {
+  const ss = getSpreadsheet();
+  const service = getHealthService();
+
+  if (!service.hasAccess()) {
+    Logger.log('Not authorized. Run showAuthUrl() to get the auth URL.');
+    return;
+  }
+
+  const hrSheet = getTab(ss, TAB_HEART_RATE);
+  if (!hrSheet) {
+    Logger.log('Heart Rate sheet missing. Run setupSheet() first.');
+    return;
+  }
+
+  // Clear existing HR data below headers to ensure clean, correct backfill.
+  const lastRow = hrSheet.getLastRow();
+  if (lastRow >= 2) {
+    hrSheet.deleteRows(2, lastRow - 1);
+    Logger.log('Cleared existing heart rate data.');
+  }
+
+  const athleteAge = getAthleteAge(ss);
+  const maxHR = 220 - athleteAge;
+  Logger.log('Using Athlete Age: ' + athleteAge + ' (Max HR: ' + maxHR + ' bpm)');
+  const since = new Date('2026-03-20T00:00:00Z'); // Start from installation date
+
+  Logger.log('Fetching exercise sessions from API...');
+  let sessions;
+  try {
+    sessions = fetchSessionsFromAPI(service, since);
+  } catch (err) {
+    Logger.log('Failed to fetch sessions: ' + err.message);
+    return;
+  }
+
+  Logger.log('Found ' + sessions.length + ' session(s). Fetching heart rate data for each...');
+  let hrCount = 0;
+
+  for (const session of sessions) {
+    try {
+      const start = session.start_time;
+      const end = session.end_time;
+      Logger.log('Fetching HR for ' + session.date + ' (' + start + ' to ' + end + ')...');
+
+      const hrPoints = fetchHeartRateDataPoints(service, start, end);
+
+      if (hrPoints.length === 0) {
+        Logger.log('No HR data found for ' + session.date);
+        continue;
+      }
+
+      const summary = computeHRSummary(hrPoints, athleteAge, session.duration_minutes);
+
+      if (summary) {
+        hrSheet.appendRow([
+          session.date,
+          summary.avgBpm,
+          summary.maxBpm,
+          summary.minBpm,
+          summary.zones.zone1_mins,
+          summary.zones.zone2_mins,
+          summary.zones.zone3_mins,
+          summary.zones.zone4_mins,
+          summary.zones.zone5_mins,
+          start,
+          end
+        ]);
+        hrCount++;
+        Logger.log('Wrote HR summary for ' + session.date + ': Avg=' + summary.avgBpm + ' bpm');
+      }
+    } catch (err) {
+      Logger.log('Error fetching HR for ' + session.date + ': ' + err.message);
+    }
+  }
+
+  Logger.log('--- Backfill Complete ---');
+  Logger.log('HR data written: ' + hrCount);
+  appendLog(ss, 'INFO', 'HR backfill complete. ' + hrCount + ' session(s) updated.');
+}
+
+/**
+ * UTILITY: Clears all synced sessions and resets the Config tab sync timestamp
+ * so a full historical re-sync of exercise sessions can be performed.
+ *
+ * This populates calories and steps for all historical sessions.
+ */
+function clearAndReSync() {
+  const ss = getSpreadsheet();
+  
+  // Clear Sessions tab (below headers)
+  const sessionsSheet = getTab(ss, TAB_SESSIONS);
+  if (sessionsSheet && sessionsSheet.getLastRow() >= 2) {
+    sessionsSheet.deleteRows(2, sessionsSheet.getLastRow() - 1);
+    Logger.log('Cleared Sessions tab.');
+  }
+  
+  // Reset Config tab checkpoint
+  setLastSyncTimestamp(ss, new Date('2026-03-20T00:00:00Z'));
+  
+  Logger.log('Cleared sessions and reset checkpoint. Now run syncSessions() to fetch all sessions.');
 }

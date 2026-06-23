@@ -29,8 +29,12 @@
     <header class="header">
       <div class="header__brand">
         <span class="header__icon" aria-hidden="true">🏓</span>
-        <h1 class="header__title">Rubber Tracker</h1>
+        <h1 class="header__title"><a href="index.html" class="header__brand-link">Rubber Tracker</a></h1>
       </div>
+      <nav class="header__nav">
+        <a href="index.html" class="nav-link nav-link--active">Dashboard</a>
+        <a href="about.html" class="nav-link">About</a>
+      </nav>
       <div class="header__controls">
         <select id="rubber-sheet-select" class="select-dark" aria-label="Select rubber sheet">
           <option value="">Loading…</option>
@@ -47,45 +51,6 @@
       <!-- ====== Sidebar ====== -->
       <aside class="dashboard-sidebar">
 
-        <!-- Bio Card -->
-        <article class="glass-card bio-card">
-          <div class="bio-header">
-            <div class="bio-avatar">MG</div>
-            <div class="bio-header-meta">
-              <h2 class="bio-name">Michael Guo</h2>
-              <span class="usatt-badge">USATT 2382</span>
-            </div>
-          </div>
-          <div class="bio-body">
-            <p class="bio-sub">UT Austin · Stats &amp; Data Science</p>
-            <p class="bio-desc">
-              Calm table tennis player who want to help the table tennis community with my vibe coding skills
-            </p>
-          </div>
-          <div class="bio-footer">
-            <a href="https://github.com/michaelguo07" target="_blank" class="bio-social-link"
-              aria-label="GitHub Profile">
-              <svg class="social-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path
-                  d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22">
-                </path>
-              </svg>
-              <span>michaelguo07</span>
-            </a>
-            <a href="https://instagram.com/guobropro" target="_blank" class="bio-social-link"
-              aria-label="Instagram Profile">
-              <svg class="social-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-              </svg>
-              <span>@guobropro</span>
-            </a>
-          </div>
-        </article>
-
         <!-- Settings Card -->
         <article class="glass-card settings-card">
           <h2 class="settings-card__title">⚙️ Data Source</h2>
@@ -93,7 +58,6 @@
             <input type="url" id="api-url-input" class="input-dark" placeholder="Apps Script Web App URL"
               aria-label="Apps Script API URL" />
             <button id="btn-save-api" class="btn btn--primary">Save &amp; Reload</button>
-            <button id="btn-clear-api" class="btn btn--ghost">Use Sample Data</button>
           </div>
         </article>
 
@@ -141,6 +105,76 @@
             <p class="stat-card__value" id="stat-date-range-value" style="font-size:1.1rem;">—</p>
             <p class="stat-card__sub" id="stat-date-range-sub">&nbsp;</p>
           </article>
+          <article class="glass-card stat-card" id="stat-weekly-time">
+            <p class="stat-card__label">Weekly Play Time</p>
+            <p class="stat-card__value stat-card__value--accent" id="stat-weekly-time-value">—</p>
+            <p class="stat-card__sub" id="stat-weekly-time-sub">&nbsp;</p>
+          </article>
+          <article class="glass-card stat-card" id="stat-weekly-calories">
+            <p class="stat-card__label">Weekly Calories</p>
+            <p class="stat-card__value stat-card__value--calories" id="stat-weekly-calories-value">—</p>
+            <p class="stat-card__sub" id="stat-weekly-calories-sub">&nbsp;</p>
+          </article>
+          <article class="glass-card stat-card" id="stat-weekly-steps">
+            <p class="stat-card__label">Weekly Steps</p>
+            <p class="stat-card__value stat-card__value--steps" id="stat-weekly-steps-value">—</p>
+            <p class="stat-card__sub" id="stat-weekly-steps-sub">&nbsp;</p>
+          </article>
+        </section>
+
+        <!-- ====== Heart Rate Zones ====== -->
+        <section class="hr-section" id="hr-section" aria-label="Heart Rate Tracking">
+          <div class="hr-section__header">
+            <h2 class="hr-section__title"><span class="hr-pulse" aria-hidden="true">❤️</span> Heart Rate Zones</h2>
+            <select id="hr-session-select" class="select-dark select-dark--sm" aria-label="Select session for heart rate data">
+              <option value="">Select a session…</option>
+            </select>
+          </div>
+
+          <!-- HR Summary Stats -->
+          <div class="hr-stats-row" id="hr-stats-row">
+            <article class="glass-card hr-stat-card">
+              <p class="hr-stat-card__label">Avg BPM</p>
+              <p class="hr-stat-card__value hr-stat-card__value--avg" id="hr-avg-bpm">—</p>
+            </article>
+            <article class="glass-card hr-stat-card">
+              <p class="hr-stat-card__label">Max BPM</p>
+              <p class="hr-stat-card__value hr-stat-card__value--max" id="hr-max-bpm">—</p>
+            </article>
+            <article class="glass-card hr-stat-card">
+              <p class="hr-stat-card__label">Min BPM</p>
+              <p class="hr-stat-card__value hr-stat-card__value--min" id="hr-min-bpm">—</p>
+            </article>
+            <article class="glass-card hr-stat-card">
+              <p class="hr-stat-card__label">Calories</p>
+              <p class="hr-stat-card__value hr-stat-card__value--calories" id="hr-calories">—</p>
+            </article>
+            <article class="glass-card hr-stat-card">
+              <p class="hr-stat-card__label">Steps</p>
+              <p class="hr-stat-card__value hr-stat-card__value--steps" id="hr-steps">—</p>
+            </article>
+          </div>
+
+          <!-- Zone Breakdown -->
+          <article class="glass-card hr-zones-card" id="hr-zones-card">
+            <h3 class="hr-zones-card__title">Zone Breakdown</h3>
+            <div class="hr-zone-bars" id="hr-zone-bars"></div>
+            <p class="hr-zone-total" id="hr-zone-total"></p>
+          </article>
+
+          <!-- Heart Rate Trend Chart -->
+          <article class="glass-card hr-chart-card" id="hr-chart-card">
+            <h3 class="hr-zones-card__title">Heart Rate Intensity History</h3>
+            <div class="chart-card__canvas-wrap" style="height: 220px;">
+              <canvas id="chart-hr-trend"></canvas>
+            </div>
+          </article>
+
+          <!-- HR No-Data State -->
+          <div class="hr-empty-state hidden" id="hr-empty-state">
+            <p>No heart rate data available for this session.</p>
+            <p class="hr-empty-state__hint">Heart rate is recorded when a Fitbit or Pixel Watch is worn during practice.</p>
+          </div>
         </section>
 
         <!-- Charts -->
@@ -176,6 +210,14 @@
       </main>
     </div>
 
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay hidden">
+    <div class="loading-spinner-wrap">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Retrieving training logs...</p>
+    </div>
   </div>
 
   <!-- Application Module -->
