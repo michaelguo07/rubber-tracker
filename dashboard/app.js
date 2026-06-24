@@ -780,18 +780,7 @@ function renderAll(data, sheetId) {
   renderCumulativeChart(result.chartData.cumulative_chart);
   renderSessionChart(result.chartData.session_chart);
   renderAnomalies(result.anomalies);
-  
-  // Prepend rich debug metrics to the summary text
-  const targetSheet = (filteredData.rubber_sheets || []).find(s => s.id === (sheetId || (result.rubberHealth && result.rubberHealth.isActiveSheet ? result.rubberHealth.id : null))) || (filteredData.rubber_sheets && filteredData.rubber_sheets.length > 0 ? filteredData.rubber_sheets[filteredData.rubber_sheets.length - 1] : {});
-  elSummaryText.innerHTML = `<div style="background: rgba(255, 107, 0, 0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(255, 107, 0, 0.2); margin-bottom: 16px; font-family: monospace; font-size: 0.85rem; line-height: 1.5; color: var(--text-primary);">` +
-                            `<strong style="color: var(--accent);">🔧 Data Pipeline Debugger:</strong><br>` +
-                            `• Requested Sheet ID: <strong>${sheetId || 'default (active)'}</strong><br>` +
-                            `• Resolved Sheet: <strong>${targetSheet.name || 'none'}</strong> (ID: <strong>${targetSheet.id || 'none'}</strong>)<br>` +
-                            `• Sheet Dates: Installed: <strong>${targetSheet.installed_date || 'none'}</strong> | Replaced: <strong>${targetSheet.replaced_date || 'none'}</strong><br>` +
-                            `• Raw TT Sessions count: <strong>${ttSessions.length}</strong><br>` +
-                            `• Date-Filtered Sessions count: <strong>${result.filteredSessions?.length || 0}</strong>` +
-                            `</div>` +
-                            result.summary;
+  elSummaryText.textContent = result.summary;
 
   renderHeartRate(filteredData.heart_rate_sessions || [], filteredData.sessions || []);
 }
