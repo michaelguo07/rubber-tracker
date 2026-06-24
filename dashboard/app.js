@@ -1581,7 +1581,6 @@ function daysBetween(a, b) {
 // ---------------------------------------------------------------------------
 // Coaching Tab & Drill Breakdown Rendering
 // ---------------------------------------------------------------------------
-
 function renderCoachingTab() {
   if (!appData) return;
 
@@ -1593,11 +1592,44 @@ function renderCoachingTab() {
     feedback: (appData.feedback || []).filter(f => (f.player_id || 'player-001') === activePlayerId)
   };
 
-  const result = analyzeRubberUsage(filteredData, elSheetSelect.value || undefined, getDefaultRubberLifespan());
-  currentCoachingSessions = [...(result.filteredSessions || [])].reverse(); // Most recent first for feed
+  // Coaching sessions should list ALL table tennis sessions for the player, independent of the selected rubber sheet
+  const ttSessions = (filteredData.sessions || []).filter(s => s.activity_type === 'table_tennis');
+  currentCoachingSessions = [...ttSessions].sort((a, b) => a.date.localeCompare(b.date)).reverse(); // Most recent first for feed
+
+  // Aggregate drill stats from all coaching feedback entries for this player
+  const drillDurations = {};
+  let totalDrillMinutes = 0;
+  (filteredData.feedback || []).forEach(fb => {
+    if (fb.drills) {
+      try {
+        let drillsList = [];
+        if (typeof fb.drills === 'string') {
+          drillsList = JSON.parse(fb.drills);
+        } else if (Array.isArray(fb.drills)) {
+          drillsList = fb.drills;
+        }
+        drillsList.forEach(d => {
+          const name = d.name || d.drill || 'Other';
+          const dur = Number(d.duration) || 0;
+          if (dur > 0) {
+            drillDurations[name] = (drillDurations[name] || 0) + dur;
+            totalDrillMinutes += dur;
+          }
+        });
+      } catch (e) {
+        console.error('Failed to parse drills for feedback', e);
+      }
+    }
+  });
+
+  const aggregateDrillStats = Object.keys(drillDurations).map(name => ({
+    name,
+    duration: drillDurations[name],
+    percentage: totalDrillMinutes > 0 ? Math.round((drillDurations[name] / totalDrillMinutes) * 100) : 0
+  })).sort((a, b) => b.duration - a.duration);
 
   // Render drill stats chart
-  renderDrillDistributionChart(result.drillStats || []);
+  renderDrillDistributionChart(aggregateDrillStats);
 
   // Render coaching session timeline feed
   renderCoachingSessionFeed(currentCoachingSessions);
@@ -1617,6 +1649,7 @@ function renderCoachingTab() {
     showEmptyFeedbackDetail();
   }
 }
+
 
 function renderDrillDistributionChart(drillStats) {
   const canvas = document.getElementById('chart-drill-distribution');
