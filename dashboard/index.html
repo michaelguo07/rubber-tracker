@@ -4,9 +4,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rubber Tracker — Table Tennis Equipment Dashboard</title>
+  <title>TTInsights — Table Tennis Training & Equipment Dashboard</title>
   <meta name="description"
-    content="Track table tennis rubber sheet wear and usage with real-time analytics, cumulative play-time charts, and anomaly detection." />
+    content="Track table tennis rubber sheet wear, coaching feedback, and training drills with real-time analytics." />
   <meta name="theme-color" content="#0b0e1a" />
 
   <!-- Google Fonts — Inter -->
@@ -29,34 +29,103 @@
     <header class="header">
       <div class="header__brand">
         <span class="header__icon" aria-hidden="true">🏓</span>
-        <h1 class="header__title"><a href="index.html" class="header__brand-link">Rubber Tracker</a></h1>
+        <h1 class="header__title"><a href="index.html" class="header__brand-link">TTInsights</a></h1>
       </div>
       <nav class="header__nav">
-        <a href="index.html" class="nav-link nav-link--active">Dashboard</a>
+        <a href="#" id="nav-roster" class="nav-link hidden">Roster</a>
+        <a href="#" id="nav-dashboard" class="nav-link nav-link--active">Dashboard</a>
+        <a href="#" id="nav-coaching" class="nav-link">Coaching Feedback</a>
         <a href="about.html" class="nav-link">About</a>
       </nav>
       <div class="header__controls">
-        <select id="rubber-sheet-select" class="select-dark" aria-label="Select rubber sheet">
-          <option value="">Loading…</option>
-        </select>
+        <div id="player-selector-container" class="header__control-item hidden" style="margin-right:12px;">
+          <label for="player-select" class="header__control-label" style="font-size:0.8rem; color:var(--text-secondary); margin-right:6px;" id="player-select-label">Student:</label>
+          <select id="player-select" class="select-dark select-dark--sm">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+        <div class="header__control-item" style="margin-right:12px;">
+          <select id="rubber-sheet-select" class="select-dark select-dark--sm" aria-label="Select rubber sheet">
+            <option value="">Loading…</option>
+          </select>
+        </div>
+        <div id="user-profile-badge" class="header__control-item user-profile-badge hidden" style="display:flex; align-items:center; gap:8px;">
+          <span id="user-profile-name" class="user-profile-name" style="font-size:0.85rem; color:var(--text-primary); font-weight:500; border-left:1px solid rgba(255,255,255,0.1); padding-left:12px;"></span>
+          <button id="btn-logout" class="btn btn--logout" title="Log Out" aria-label="Log Out" style="background:none; border:none; padding:4px; color:var(--text-secondary); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:color 0.2s;">
+            <svg class="logout-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+          </button>
+        </div>
       </div>
     </header>
 
     <!-- Error banner -->
     <div id="error-banner" class="error-banner" role="alert"></div>
 
-    <!-- ====== Dashboard Layout ====== -->
-    <div class="dashboard-layout">
+    <!-- ====== Coach Roster Tab ====== -->
+    <div id="view-coach-roster" class="tab-view hidden">
+      <div class="roster-container" style="max-width:1200px; margin:0 auto; padding:20px;">
+        <header class="roster-header" style="margin-bottom:24px;">
+          <h2 class="roster-title" style="font-size:1.8rem; font-weight:700; color:var(--text-primary); margin-bottom:8px;">📋 Athlete Roster Overview</h2>
+          <p class="roster-subtitle" style="font-size:0.95rem; color:var(--text-secondary);">Monitor training sessions, feedback status, and equipment health for all active club players.</p>
+        </header>
+
+        <article class="glass-card roster-card">
+          <div class="roster-table-wrapper" style="overflow-x:auto;">
+            <table class="roster-table" id="roster-table" style="width:100%; border-collapse:collapse; text-align:left;">
+              <thead>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.1); color:var(--text-secondary); font-size:0.85rem; font-weight:600;">
+                  <th style="padding:16px 20px;">Player</th>
+                  <th style="padding:16px 20px;">Email</th>
+                  <th style="padding:16px 20px;">Last Active</th>
+                  <th style="padding:16px 20px;">Feedback Status</th>
+                  <th style="padding:16px 20px;">FH Rubber Health</th>
+                  <th style="padding:16px 20px;">BH Rubber Health</th>
+                  <th style="padding:16px 20px; text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="roster-table-body" style="color:var(--text-primary); font-size:0.9rem;">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <!-- ====== Dashboard Tab ====== -->
+    <div id="view-dashboard" class="tab-view">
+      <!-- ====== Dashboard Layout ====== -->
+      <div class="dashboard-layout">
 
       <!-- ====== Sidebar ====== -->
       <aside class="dashboard-sidebar">
 
         <!-- Settings Card -->
         <article class="glass-card settings-card">
-          <h2 class="settings-card__title">⚙️ Data Source</h2>
+          <h2 class="settings-card__title">⚙️ Data Source &amp; Preferences</h2>
           <div class="settings-column">
             <input type="url" id="api-url-input" class="input-dark" placeholder="Apps Script Web App URL"
               aria-label="Apps Script API URL" />
+            <div class="settings-input-group">
+              <label for="default-lifespan-input" class="settings-label">Default Rubber Life:</label>
+              <div class="inline-input-wrapper">
+                <input type="number" id="default-lifespan-input" class="input-dark inline-input" placeholder="60" min="1" max="500" value="60"
+                  aria-label="Default Rubber Lifespan in Hours" />
+                <span class="settings-unit">hours</span>
+              </div>
+            </div>
+            <div class="settings-input-group">
+              <label for="athlete-age-input" class="settings-label">Athlete Age:</label>
+              <div class="inline-input-wrapper">
+                <input type="number" id="athlete-age-input" class="input-dark inline-input" placeholder="18" min="1" max="120" value="18"
+                  aria-label="Athlete Age in Years" />
+                <span class="settings-unit">years</span>
+              </div>
+            </div>
             <button id="btn-save-api" class="btn btn--primary">Save &amp; Reload</button>
           </div>
         </article>
@@ -71,6 +140,20 @@
           <p class="stat-card__label" id="stat-blade-label">Blade: Loading…</p>
           <p class="stat-card__value stat-card__value--accent" id="stat-blade-value">—</p>
           <p class="stat-card__sub" id="stat-blade-sub">&nbsp;</p>
+        </article>
+
+        <!-- Rubber Health Card (Wide Card) -->
+        <article class="glass-card stat-card stat-card--wide" id="stat-rubber-health">
+          <div class="rubber-health-header">
+            <p class="stat-card__label" id="stat-rubber-health-label">Rubber Health Estimate</p>
+            <span class="rubber-health-badge" id="rubber-health-badge">Calculating…</span>
+          </div>
+          <div class="rubber-health-container">
+            <div class="rubber-health-bar-wrap">
+              <div class="rubber-health-bar-fill" id="rubber-health-bar-fill" style="width: 0%;"></div>
+            </div>
+            <p class="stat-card__sub" id="stat-rubber-health-sub">&nbsp;</p>
+          </div>
         </article>
 
         <!-- Stats Grid -->
@@ -209,6 +292,137 @@
 
       </main>
     </div>
+  </div> <!-- /view-dashboard -->
+
+  <!-- ====== Coaching Feedback Tab ====== -->
+  <div id="view-coaching" class="tab-view hidden">
+    <div class="coaching-layout">
+      
+      <!-- Coaching Sidebar: Sessions Feed -->
+      <aside class="coaching-sidebar">
+        
+        <!-- Timeline/Feed of Sessions -->
+        <article class="glass-card coaching-feed-card">
+          <h2 class="coaching-feed-card__title">📅 Lesson &amp; Training Logs</h2>
+          <p class="coaching-feed-card__sub">Select a session to view details and feedback</p>
+          <div id="coaching-session-list" class="coaching-session-list">
+            <!-- Dynamically populated session items -->
+          </div>
+        </article>
+        
+      </aside>
+      
+      <!-- Coaching Main Content: Session feedback viewer & editor -->
+      <main class="coaching-main">
+        
+        <!-- Selected Session Feedback Card -->
+        <article class="glass-card feedback-detail-card" id="feedback-detail-card">
+          
+          <!-- Detail Header -->
+          <div class="feedback-detail-header">
+            <div class="feedback-detail-header-meta">
+              <h2 id="feedback-detail-date" class="feedback-detail-title">Select a Session</h2>
+              <p id="feedback-detail-duration" class="feedback-detail-subtitle">Choose a session from the timeline to see coaching feedback</p>
+            </div>
+          </div>
+          
+          <!-- Detail Body -->
+          <div class="feedback-detail-body">
+            
+            <!-- Drill Allocation Section (Always Visible) -->
+            <div class="drill-progress-section" id="coaching-drills-section" style="display:none;">
+              <h3 class="coaching-sub-title">⏱️ Training Drill Allocation</h3>
+              <div id="drill-progress-bar-wrap" class="drill-progress-bar-wrap">
+                <div class="drill-progress-bar" id="feedback-drill-progress-bar"></div>
+              </div>
+              
+              <!-- Drill Form Row (Always Visible) -->
+              <div class="drill-form-row" id="editor-drill-form">
+                <div class="form-group flex-2">
+                  <label for="editor-drill-select" class="editor-label">Drill</label>
+                  <select id="editor-drill-select" class="select-dark select-dark--sm w-full">
+                    <optgroup label="Single Ball">
+                      <option value="Warmup">Warmup</option>
+                      <option value="Forehand 1-1">Forehand 1-1</option>
+                      <option value="1 Forehand 1 Backhand">1 Forehand 1 Backhand</option>
+                      <option value="Falkenberg">Falkenberg</option>
+                    </optgroup>
+                    <optgroup label="Serve Receive (SR)">
+                      <option value="Serve and Attack">Serve and Attack</option>
+                      <option value="Serve and Flick">Serve and Flick</option>
+                    </optgroup>
+                    <optgroup label="Multiball">
+                      <option value="Falkenberg">Falkenberg</option>
+                      <option value="Underspin Loop">Underspin Loop</option>
+                      <option value="Push/Flick">Push/Flick</option>
+                    </optgroup>
+                    <optgroup label="Other">
+                      <option value="Match Play">Match Play</option>
+                      <option value="custom">Custom Drill...</option>
+                    </optgroup>
+                  </select>
+                </div>
+                
+                <div class="form-group flex-3 hidden" id="editor-custom-drill-group">
+                  <label for="editor-custom-drill" class="editor-label">Custom Drill Name</label>
+                  <input type="text" id="editor-custom-drill" class="input-dark input-dark--sm w-full" placeholder="e.g., Short Game Practice" />
+                </div>
+                
+                <div class="form-group flex-3">
+                  <label for="editor-drill-duration" class="editor-label">Duration: <span id="editor-duration-val">15</span> mins</label>
+                  <div class="slider-container">
+                    <input type="range" id="editor-drill-duration" class="slider-dark" min="1" max="60" value="15" />
+                  </div>
+                </div>
+                
+                <div class="form-group flex-1 align-end">
+                  <button id="btn-add-drill" class="btn btn--primary btn--sm">Add Drill</button>
+                </div>
+              </div>
+
+              <!-- Drills List Table & Summary (Always Visible) -->
+              <div class="draft-drills-container" style="margin-bottom:20px;">
+                <h4 class="editor-label">Drills Allocated for Session</h4>
+                <div class="feedback-drill-list-table" id="feedback-drill-list-table">
+                  <!-- Filled by JS -->
+                </div>
+                <div class="draft-drills-summary" id="editor-drill-summary-text" style="margin-top:10px;">
+                  Total allocated: 0 / 60 mins (60 mins remaining)
+                </div>
+              </div>
+            </div>
+            
+            <hr class="feedback-divider" id="coaching-divider" style="display:none;" />
+            
+            <!-- Coaches Comments Section -->
+            <div class="comments-section" id="coaching-comments-section" style="display:none;">
+              <div class="comments-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 class="coaching-sub-title" style="margin-bottom:0;">📋 Coach's Comments</h3>
+                <button id="btn-edit-comments" class="btn btn--secondary btn--sm">✏️ Edit Comments</button>
+              </div>
+              
+              <!-- Viewer Mode Comments -->
+              <blockquote id="feedback-coaches-comments" class="feedback-comments-blockquote">
+                Select a session to view comments...
+              </blockquote>
+              
+              <!-- Editor Mode Comments (Hidden by default) -->
+              <div id="comments-editor-wrap" class="hidden" style="margin-top:16px;">
+                <textarea id="editor-comments" class="input-dark editor-textarea" placeholder="Enter comments on student's performance, technique adjustments, etc..."></textarea>
+                <div class="editor-footer" style="margin-top:12px;">
+                  <button id="btn-save-comments" class="btn btn--primary">Save Comments</button>
+                  <button id="btn-cancel-comments" class="btn btn--secondary">Cancel</button>
+                </div>
+              </div>
+            </div>
+            
+          </div>
+        </article>
+        
+      </main>
+      
+    </div>
+  </div>
 
   </div>
 
@@ -217,6 +431,46 @@
     <div class="loading-spinner-wrap">
       <div class="loading-spinner"></div>
       <p class="loading-text">Retrieving training logs...</p>
+    </div>
+  </div>
+
+  <!-- ====== Login Overlay ====== -->
+  <div id="login-overlay" class="login-overlay">
+    <div class="login-box glass-card">
+      <div class="login-header">
+        <span class="login-logo" aria-hidden="true">🏓</span>
+        <h2 class="login-title">Welcome to TTInsights</h2>
+        <p class="login-subtitle">Please sign in to access your table tennis metrics</p>
+      </div>
+      <form id="login-form" class="login-form">
+        <div class="form-group">
+          <label for="login-email" class="editor-label">Name or Email</label>
+          <input type="text" id="login-email" class="input-dark w-full" placeholder="e.g. Michael Guo" required />
+        </div>
+        <div class="form-group">
+          <label for="login-code" class="editor-label">Access Code</label>
+          <input type="password" id="login-code" class="input-dark w-full" placeholder="4-digit access code" required />
+        </div>
+        <div class="form-group hidden">
+          <label for="login-role" class="editor-label">Role</label>
+          <select id="login-role" class="select-dark w-full">
+            <option value="player">Player</option>
+            <option value="coach">Coach</option>
+            <option value="parent">Parent</option>
+          </select>
+        </div>
+        <div class="login-config-toggle" style="margin-bottom: 12px;">
+          <button type="button" id="btn-toggle-login-config" class="btn-link" style="background: none; border: none; color: var(--text-secondary); font-size: 0.85rem; cursor: pointer; padding: 4px 0; text-decoration: underline; display: inline-block;">
+            ⚙️ Configure API Connection
+          </button>
+        </div>
+        <div id="login-config-fields" class="form-group hidden" style="margin-bottom: 16px;">
+          <label for="login-api-url" class="editor-label">Apps Script Web App URL</label>
+          <input type="url" id="login-api-url" class="input-dark w-full" placeholder="https://script.google.com/.../exec" />
+        </div>
+        <div id="login-error" class="login-error hidden" role="alert"></div>
+        <button type="submit" id="btn-login-submit" class="btn btn--primary w-full login-btn">Sign In</button>
+      </form>
     </div>
   </div>
 

@@ -803,7 +803,7 @@ body::after {
 /* Individual zone bar rows */
 .hr-zone-row {
   display: grid;
-  grid-template-columns: 6rem 1fr 3.5rem;
+  grid-template-columns: 7rem 1fr 3.5rem;
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 0.6rem;
@@ -816,6 +816,22 @@ body::after {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.hr-zone-row__label-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.hr-zone-row__name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.hr-zone-row__range {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
 }
 
 .hr-zone-row__dot {
@@ -1124,3 +1140,754 @@ body::after {
   0%, 100% { opacity: 0.6; }
   50% { opacity: 1; }
 }
+
+/* ====== Tab switching ====== */
+.tab-view {
+  transition: opacity var(--transition);
+}
+.tab-view.hidden {
+  display: none !important;
+}
+
+/* ====== Coaching Tab Layout ====== */
+.coaching-layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.coaching-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.coaching-main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Timeline feed session list */
+.coaching-session-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 6px;
+  margin-top: 14px;
+}
+
+/* Custom Scrollbar for Session List */
+.coaching-session-list::-webkit-scrollbar {
+  width: 6px;
+}
+.coaching-session-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 3px;
+}
+.coaching-session-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+.coaching-session-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Session List Card Item */
+.coaching-session-item {
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.coaching-session-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+.coaching-session-item--active {
+  background: var(--accent-glow) !important;
+  border-color: var(--accent-glow-strong) !important;
+  box-shadow: 0 4px 15px rgba(255, 107, 0, 0.08);
+}
+
+.coaching-session-item__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.coaching-session-item__date {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.coaching-session-item__duration {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.coaching-session-item__preview {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Drill Badges inside timeline feed cards */
+.coaching-session-item__drills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.drill-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-primary);
+}
+
+/* Specific Drill Badge Colors */
+.drill-badge--warmup { background: rgba(59, 130, 246, 0.15); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.25); }
+.drill-badge--fh-loop { background: rgba(249, 115, 22, 0.15); color: #fdba74; border: 1px solid rgba(249, 115, 22, 0.25); }
+.drill-badge--bh-loop { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.25); }
+.drill-badge--footwork { background: rgba(34, 197, 94, 0.15); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.25); }
+.drill-badge--block { background: rgba(168, 85, 247, 0.15); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.25); }
+.drill-badge--serve-attack { background: rgba(236, 72, 153, 0.15); color: #f9a8d4; border: 1px solid rgba(236, 72, 153, 0.25); }
+.drill-badge--receive { background: rgba(20, 184, 166, 0.15); color: #99f6e4; border: 1px solid rgba(20, 184, 166, 0.25); }
+.drill-badge--multiball { background: rgba(234, 179, 8, 0.15); color: #fef08a; border: 1px solid rgba(234, 179, 8, 0.25); }
+.drill-badge--match { background: rgba(99, 102, 241, 0.15); color: #c7d2fe; border: 1px solid rgba(99, 102, 241, 0.25); }
+
+/* Detail Card layout styling */
+.feedback-detail-card {
+  padding: 28px;
+}
+
+.feedback-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 20px;
+}
+
+.feedback-detail-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 4px;
+}
+
+.feedback-detail-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.coaching-sub-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+/* Stacked Progress Bar (Time Table) */
+.drill-progress-bar-wrap {
+  width: 100%;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  margin-bottom: 20px;
+  border: 1px solid var(--border-subtle);
+}
+
+.drill-progress-bar {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.drill-progress-segment {
+  height: 100%;
+  transition: width 0.3s ease;
+  position: relative;
+}
+.drill-progress-segment:hover::after {
+  content: attr(data-label);
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #000;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Segment colors matching drill badges */
+.drill-seg--warmup { background-color: #3b82f6; }
+.drill-seg--fh-loop { background-color: #f97316; }
+.drill-seg--bh-loop { background-color: #ef4444; }
+.drill-seg--footwork { background-color: #22c55e; }
+.drill-seg--block { background-color: #a855f7; }
+.drill-seg--serve-attack { background-color: #ec4899; }
+.drill-seg--receive { background-color: #14b8a6; }
+.drill-seg--multiball { background-color: #eab308; }
+.drill-seg--match { background-color: #6366f1; }
+.drill-seg--other { background-color: #6b7280; }
+
+.feedback-drill-list-table {
+  width: 100%;
+}
+
+.feedback-drill-list-table table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+.feedback-drill-list-table th, .feedback-drill-list-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.feedback-drill-list-table th {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.feedback-drill-list-table td {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+.feedback-divider {
+  border: 0;
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 28px 0;
+}
+
+/* Coaches Comments blockquote styling */
+.feedback-comments-blockquote {
+  font-style: italic;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--text-primary);
+  border-left: 3px solid var(--accent);
+  padding: 8px 0 8px 20px;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* Editor Form elements */
+.editor-section {
+  margin-bottom: 24px;
+}
+
+.editor-section-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.editor-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.editor-textarea {
+  width: 100%;
+  height: 120px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  resize: vertical;
+  line-height: 1.6;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-card);
+  color: var(--text-primary);
+}
+
+.drill-form-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  margin-bottom: 20px;
+  background: rgba(255, 255, 255, 0.01);
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-1 { flex: 1; }
+.flex-2 { flex: 2; }
+.flex-3 { flex: 3; }
+.align-end { justify-content: flex-end; }
+.w-full { width: 100%; }
+
+/* Custom slider style */
+.slider-container {
+  display: flex;
+  align-items: center;
+  height: 38px;
+}
+
+.slider-dark {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  outline: none;
+  transition: background 0.2s;
+}
+
+.slider-dark::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(255, 107, 0, 0.4);
+  transition: transform 0.1s;
+}
+
+.slider-dark::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.slider-dark::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(255, 107, 0, 0.4);
+  border: none;
+  transition: transform 0.1s;
+}
+
+.slider-dark::-moz-range-thumb:hover {
+  transform: scale(1.2);
+}
+
+.btn--sm {
+  padding: 8px 16px;
+  font-size: 0.82rem;
+  height: 38px;
+}
+
+/* Draft drills list container */
+.draft-drills-container {
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.draft-drills-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.draft-drills-table th, .draft-drills-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.draft-drills-table th {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.draft-drills-table td {
+  font-size: 0.85rem;
+}
+
+.btn-delete-drill {
+  background: none;
+  border: none;
+  color: var(--error);
+  cursor: pointer;
+  padding: 4px;
+  font-size: 1.1rem;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.btn-delete-drill:hover {
+  opacity: 1;
+}
+
+.draft-drills-summary {
+  margin-top: 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+.editor-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+/* Drill legend below distribution chart */
+.drill-legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 0.75rem;
+}
+
+.drill-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+}
+
+.drill-legend-color {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .coaching-layout {
+    grid-template-columns: 1fr;
+  }
+  .coaching-sidebar {
+    order: 2;
+  }
+  .coaching-main {
+    order: 1;
+  }
+}
+@media (max-width: 768px) {
+  .drill-form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .align-end {
+    align-self: flex-end;
+  }
+}
+
+/* --- Rubber Health Card & Preferences Settings ---------------- */
+.settings-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+.settings-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.inline-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inline-input {
+  width: 80px;
+  padding: 8px;
+  text-align: center;
+}
+
+.settings-unit {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.rubber-health-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.rubber-health-badge {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+}
+
+.rubber-health-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rubber-health-bar-wrap {
+  width: 100%;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  position: relative;
+}
+
+.rubber-health-bar-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 5px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1), background 0.8s ease;
+  background: var(--accent-gradient);
+}
+
+/* ============================================================================
+   AUTHENTICATION & LOGIN OVERLAY
+   ============================================================================ */
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 6, 15, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.login-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.login-box {
+  width: 100%;
+  max-width: 420px;
+  padding: 40px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  animation: loginFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes loginFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.login-logo {
+  font-size: 3rem;
+  display: inline-block;
+  margin-bottom: 16px;
+  animation: logoPulse 2s infinite ease-in-out;
+}
+
+@keyframes logoPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.login-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+
+.login-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.login-form .form-group {
+  margin-bottom: 20px;
+}
+
+.login-btn {
+  margin-top: 10px;
+  height: 46px;
+  font-size: 0.95rem;
+}
+
+.login-error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* User Profile Badge styling */
+.user-profile-badge {
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  padding-left: 12px;
+}
+
+.btn--logout:hover {
+  color: var(--error) !important;
+}
+
+/* ============================================================================
+   COACH ROSTER STYLING
+   ============================================================================ */
+.roster-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.roster-table th {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.roster-table th, 
+.roster-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.roster-table tbody tr {
+  transition: background-color 0.2s;
+}
+
+.roster-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.roster-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.roster-avatar-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.roster-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.roster-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.roster-badge--success {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34d399;
+}
+
+.roster-badge--warning {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+}
+
+.roster-health-text {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.roster-health-text--danger {
+  color: var(--error);
+}
+
+.roster-health-text--warning {
+  color: var(--warning);
+}
+
+.roster-health-text--success {
+  color: #10b981;
+}
+

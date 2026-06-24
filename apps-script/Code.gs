@@ -66,6 +66,9 @@ const TAB_RUBBER_SHEETS = 'Rubber Sheets';
 const TAB_BLADES        = 'Blades';
 const TAB_CONFIG        = 'Config';
 const TAB_LOGS          = 'Logs';
+const TAB_PLAYERS       = 'Players';
+const TAB_COACHES       = 'Coaches';
+const TAB_PARENTS       = 'Parents';
 
 /** Google Health API v4 — exercise data endpoint. */
 const HEALTH_API_BASE = 'https://health.googleapis.com/v4';
@@ -76,6 +79,9 @@ const HEART_RATE_ENDPOINT = HEALTH_API_BASE + '/users/me/dataTypes/heart-rate/da
 
 /** New sheet tab for heart rate data. */
 const TAB_HEART_RATE = 'Heart Rate';
+
+/** New sheet tab for coaching feedback. */
+const TAB_FEEDBACK = 'Feedback';
 
 /** Default athlete age for HR zone calculation (220 - age = max HR). */
 const DEFAULT_ATHLETE_AGE = 18;
@@ -265,31 +271,67 @@ function ensureTab(ss, name, headers) {
  * Pre-populates Rubber Sheets with Dignics 05 (FH) and (BH).
  * Safe to run multiple times.
  */
+function upgradeTabWithPlayerId(ss, tabName, defaultPlayerId) {
+  let sheet = ss.getSheetByName(tabName);
+  if (!sheet) return;
+  const lastCol = sheet.getLastColumn();
+  if (lastCol === 0) return;
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  if (headers.indexOf('player_id') === -1) {
+    sheet.insertColumnBefore(1);
+    sheet.getRange(1, 1).setValue('player_id');
+    sheet.getRange(1, 1).setFontWeight('bold');
+    const lastRow = sheet.getLastRow();
+    if (lastRow >= 2) {
+      const values = [];
+      for (let i = 2; i <= lastRow; i++) {
+        values.push([defaultPlayerId]);
+      }
+      sheet.getRange(2, 1, lastRow - 1, 1).setValues(values);
+    }
+    Logger.log('Upgraded ' + tabName + ' with player_id first column');
+  }
+}
+
 function setupSheet() {
   const ss = getSpreadsheet();
+  Logger.log('SPREADSHEET DETAILS:');
+  Logger.log('  Name: ' + ss.getName());
+  Logger.log('  URL: ' + ss.getUrl());
+  Logger.log('  ID: ' + ss.getId());
 
-  ensureTab(ss, TAB_SESSIONS,      ['date', 'activity_type', 'duration_minutes', 'source', 'synced_at', 'calories', 'steps']);
+  // Upgrade existing tables if they exist to contain player_id
+  upgradeTabWithPlayerId(ss, TAB_SESSIONS, 'player-001');
+  upgradeTabWithPlayerId(ss, TAB_RUBBER_SHEETS, 'player-001');
+  upgradeTabWithPlayerId(ss, TAB_BLADES, 'player-001');
+  upgradeTabWithPlayerId(ss, TAB_HEART_RATE, 'player-001');
+  upgradeTabWithPlayerId(ss, TAB_FEEDBACK, 'player-001');
+
+  ensureTab(ss, TAB_SESSIONS,      ['player_id', 'date', 'activity_type', 'duration_minutes', 'source', 'synced_at', 'calories', 'steps']);
   ensureTab(ss, TAB_LOGS,          ['timestamp', 'type', 'message']);
 
   // Rubber Sheets tab — pre-populate with Dignics 05 (FH) and (BH) if newly created.
   let rubberSheet = ss.getSheetByName(TAB_RUBBER_SHEETS);
   if (!rubberSheet) {
     rubberSheet = ss.insertSheet(TAB_RUBBER_SHEETS);
-    rubberSheet.appendRow(['id', 'name', 'installed_date', 'replaced_date']);
-    rubberSheet.getRange(1, 1, 1, 4).setFontWeight('bold');
-    rubberSheet.appendRow(['rs-fh-001', 'Dignics 05 (FH)', '2026-03-20', '']);
-    rubberSheet.appendRow(['rs-bh-001', 'Dignics 05 (BH)', '2026-03-20', '']);
-    Logger.log('Created tab: ' + TAB_RUBBER_SHEETS + ' with Dignics 05 (FH) and (BH)');
+    rubberSheet.appendRow(['player_id', 'id', 'name', 'installed_date', 'replaced_date']);
+    rubberSheet.getRange(1, 1, 1, 5).setFontWeight('bold');
+    rubberSheet.appendRow(['player-001', 'rs-fh-001', 'Dignics 05 (FH)', '2026-03-20', '']);
+    rubberSheet.appendRow(['player-001', 'rs-bh-001', 'Dignics 05 (BH)', '2026-03-20', '']);
+    rubberSheet.appendRow(['player-002', 'rs-fh-002', 'Tenergy 05 (FH)', '2026-04-10', '']);
+    rubberSheet.appendRow(['player-002', 'rs-bh-002', 'Tenergy 05 (BH)', '2026-04-10', '']);
+    Logger.log('Created tab: ' + TAB_RUBBER_SHEETS);
   }
 
-  // Blades tab — pre-populate with Butterfly Viscaria if newly created.
+  // Blades tab — pre-populate if newly created.
   let bladesSheet = ss.getSheetByName(TAB_BLADES);
   if (!bladesSheet) {
     bladesSheet = ss.insertSheet(TAB_BLADES);
-    bladesSheet.appendRow(['id', 'name', 'installed_date', 'replaced_date']);
-    bladesSheet.getRange(1, 1, 1, 4).setFontWeight('bold');
-    bladesSheet.appendRow(['b-001', 'Butterfly Viscaria', '2026-03-20', '']);
-    Logger.log('Created tab: ' + TAB_BLADES + ' with Butterfly Viscaria');
+    bladesSheet.appendRow(['player_id', 'id', 'name', 'installed_date', 'replaced_date']);
+    bladesSheet.getRange(1, 1, 1, 5).setFontWeight('bold');
+    bladesSheet.appendRow(['player-001', 'b-001', 'Butterfly Viscaria', '2026-03-20', '']);
+    bladesSheet.appendRow(['player-002', 'b-002', 'Tenergy Blade', '2026-04-10', '']);
+    Logger.log('Created tab: ' + TAB_BLADES);
   }
 
   // Heart Rate tab — stores per-session heart rate summaries.
@@ -297,12 +339,54 @@ function setupSheet() {
   if (!hrSheet) {
     hrSheet = ss.insertSheet(TAB_HEART_RATE);
     hrSheet.appendRow([
-      'date', 'avg_bpm', 'max_bpm', 'min_bpm',
+      'player_id', 'date', 'avg_bpm', 'max_bpm', 'min_bpm',
       'zone1_mins', 'zone2_mins', 'zone3_mins', 'zone4_mins', 'zone5_mins',
       'start_time', 'end_time'
     ]);
-    hrSheet.getRange(1, 1, 1, 11).setFontWeight('bold');
+    hrSheet.getRange(1, 1, 1, 12).setFontWeight('bold');
     Logger.log('Created tab: ' + TAB_HEART_RATE);
+  }
+
+  // Feedback tab — stores coaching feedback comments and drill breakdown.
+  let feedbackSheet = ss.getSheetByName(TAB_FEEDBACK);
+  if (!feedbackSheet) {
+    feedbackSheet = ss.insertSheet(TAB_FEEDBACK);
+    feedbackSheet.appendRow(['player_id', 'session_date', 'session_duration', 'coaches_comments', 'drills']);
+    feedbackSheet.getRange(1, 1, 1, 5).setFontWeight('bold');
+    Logger.log('Created tab: ' + TAB_FEEDBACK);
+  }
+
+  // Players tab
+  let playersSheet = ss.getSheetByName(TAB_PLAYERS);
+  if (!playersSheet) {
+    playersSheet = ss.insertSheet(TAB_PLAYERS);
+    playersSheet.appendRow(['player_id', 'name', 'email', 'access_code', 'default_lifespan', 'athlete_age']);
+    playersSheet.getRange(1, 1, 1, 6).setFontWeight('bold');
+    playersSheet.appendRow(['player-001', 'Michael Guo', 'michael@ttinsights.com', '1234', '80', '18']);
+    playersSheet.appendRow(['player-002', 'Sarah Connor', 'sarah@ttinsights.com', '5678', '100', '25']);
+    Logger.log('Created tab: ' + TAB_PLAYERS);
+  }
+
+  // Coaches tab
+  let coachesSheet = ss.getSheetByName(TAB_COACHES);
+  if (!coachesSheet) {
+    coachesSheet = ss.insertSheet(TAB_COACHES);
+    coachesSheet.appendRow(['coach_id', 'name', 'email', 'access_code']);
+    coachesSheet.getRange(1, 1, 1, 4).setFontWeight('bold');
+    coachesSheet.appendRow(['coach-001', 'Coach Waldner', 'waldner@ttinsights.com', '9999']);
+    Logger.log('Created tab: ' + TAB_COACHES);
+  }
+
+  // Parents tab
+  let parentsSheet = ss.getSheetByName(TAB_PARENTS);
+  if (!parentsSheet) {
+    parentsSheet = ss.insertSheet(TAB_PARENTS);
+    parentsSheet.appendRow(['parent_id', 'name', 'email', 'access_code', 'linked_player_ids']);
+    parentsSheet.getRange(1, 1, 1, 5).setFontWeight('bold');
+    parentsSheet.appendRow(['parent-001', 'Mr. Guo', 'parent.guo@ttinsights.com', '1111', 'player-001']);
+    parentsSheet.appendRow(['parent-002', 'Mrs. Connor', 'parent.connor@ttinsights.com', '2222', 'player-002']);
+    parentsSheet.appendRow(['parent-003', 'Super Parent', 'super@ttinsights.com', '3333', 'player-001,player-002']);
+    Logger.log('Created tab: ' + TAB_PARENTS);
   }
 
   // Config tab has a special layout: A1 = label, B1 = value.
@@ -310,15 +394,12 @@ function setupSheet() {
   if (!configSheet) {
     configSheet = ss.insertSheet(TAB_CONFIG);
     configSheet.getRange('A1').setValue('last_sync_timestamp');
-    // Default: sync from the rubber install date so first run pulls all history.
     configSheet.getRange('B1').setValue('2026-03-20T00:00:00Z');
     configSheet.getRange('A1').setFontWeight('bold');
-    // Athlete age for HR zone calculation.
     configSheet.getRange('A2').setValue('athlete_age');
     configSheet.getRange('B2').setValue(DEFAULT_ATHLETE_AGE);
-    Logger.log('Created tab: ' + TAB_CONFIG + ' (sync from install date: 2026-03-20)');
+    Logger.log('Created tab: ' + TAB_CONFIG);
   } else {
-    // Proactively populate the age key/value if it's missing in an existing tab.
     if (!configSheet.getRange('A2').getValue()) {
       configSheet.getRange('A2').setValue('athlete_age');
       configSheet.getRange('B2').setValue(DEFAULT_ATHLETE_AGE);
@@ -326,6 +407,92 @@ function setupSheet() {
   }
 
   Logger.log('Sheet setup complete.');
+}
+
+function seedSarahConnorData() {
+  const ss = getSpreadsheet();
+  Logger.log('Seeding Sarah Connor (player-002) sample data...');
+
+  // Ensure Sessions tab exists
+  let sessionsSheet = ss.getSheetByName(TAB_SESSIONS);
+  if (sessionsSheet) {
+    const data = readTabAsObjects(ss, TAB_SESSIONS);
+    const hasSarah = data.some(row => row.player_id === 'player-002');
+    if (!hasSarah) {
+      sessionsSheet.appendRow(['player-002', '2026-04-12', 'table_tennis', 60, 'Google Health / Fitbit', '2026-04-13T03:00:00Z', 450, 5000]);
+      sessionsSheet.appendRow(['player-002', '2026-04-15', 'table_tennis', 75, 'Google Health / Fitbit', '2026-04-16T03:00:00Z', 550, 6200]);
+      sessionsSheet.appendRow(['player-002', '2026-04-18', 'table_tennis', 90, 'Google Health / Fitbit', '2026-04-19T03:00:00Z', 650, 7500]);
+      Logger.log('Added 3 sample sessions for Sarah Connor.');
+    } else {
+      Logger.log('Sarah Connor already has sessions. Skipped.');
+    }
+  }
+
+  // Ensure Heart Rate tab exists
+  let hrSheet = ss.getSheetByName(TAB_HEART_RATE);
+  if (hrSheet) {
+    const data = readTabAsObjects(ss, TAB_HEART_RATE);
+    const hasSarah = data.some(row => row.player_id === 'player-002');
+    if (!hasSarah) {
+      hrSheet.appendRow(['player-002', '2026-04-12', 132, 168, 80, 10, 20, 20, 8, 2, '2026-04-12T15:00:00Z', '2026-04-12T16:00:00Z']);
+      hrSheet.appendRow(['player-002', '2026-04-15', 138, 174, 84, 12, 25, 25, 10, 3, '2026-04-15T16:30:00Z', '2026-04-15T17:45:00Z']);
+      hrSheet.appendRow(['player-002', '2026-04-18', 142, 180, 88, 15, 25, 30, 15, 5, '2026-04-18T14:00:00Z', '2026-04-18T15:30:00Z']);
+      Logger.log('Added 3 sample heart rate sessions for Sarah Connor.');
+    } else {
+      Logger.log('Sarah Connor already has heart rate data. Skipped.');
+    }
+  }
+
+  // Ensure Feedback tab exists
+  let feedbackSheet = ss.getSheetByName(TAB_FEEDBACK);
+  if (feedbackSheet) {
+    const data = readTabAsObjects(ss, TAB_FEEDBACK);
+    const hasSarah = data.some(row => row.player_id === 'player-002');
+    if (!hasSarah) {
+      feedbackSheet.appendRow([
+        'player-002', '2026-04-18', 90, 
+        'Sarah showed excellent looping consistency from mid-distance today. Focus was on backhand transitions and keeping a low center of gravity during side movements.',
+        '[{"name":"Warmup","duration":15},{"name":"Loop Transition","duration":45},{"name":"Footwork","duration":30}]'
+      ]);
+      feedbackSheet.appendRow([
+        'player-002', '2026-04-15', 75, 
+        'Great effort on multi-ball drills. We worked on backhand counter-attacks and blocking heavy topspin loops.',
+        '[{"name":"Warmup","duration":15},{"name":"Counter-attack","duration":35},{"name":"Match Play","duration":25}]'
+      ]);
+      Logger.log('Added 2 sample feedback comments/drills for Sarah Connor.');
+    } else {
+      Logger.log('Sarah Connor already has feedback. Skipped.');
+    }
+  }
+
+  // Ensure Rubber Sheets tab exists and has Sarah Connor (player-002) data
+  let rubberSheet = ss.getSheetByName(TAB_RUBBER_SHEETS);
+  if (rubberSheet) {
+    const data = readTabAsObjects(ss, TAB_RUBBER_SHEETS);
+    const hasSarah = data.some(row => row.player_id === 'player-002');
+    if (!hasSarah) {
+      rubberSheet.appendRow(['player-002', 'rs-fh-002', 'Tenergy 05 (FH)', '2026-04-10', '']);
+      rubberSheet.appendRow(['player-002', 'rs-bh-002', 'Tenergy 05 (BH)', '2026-04-10', '']);
+      Logger.log('Added 2 sample rubber sheets for Sarah Connor.');
+    } else {
+      Logger.log('Sarah Connor already has rubber sheets. Skipped.');
+    }
+  }
+
+  // Ensure Blades tab exists and has Sarah Connor (player-002) data
+  let bladesSheet = ss.getSheetByName(TAB_BLADES);
+  if (bladesSheet) {
+    const data = readTabAsObjects(ss, TAB_BLADES);
+    const hasSarah = data.some(row => row.player_id === 'player-002');
+    if (!hasSarah) {
+      bladesSheet.appendRow(['player-002', 'b-002', 'Tenergy Blade', '2026-04-10', '']);
+      Logger.log('Added sample blade for Sarah Connor.');
+    } else {
+      Logger.log('Sarah Connor already has blades. Skipped.');
+    }
+  }
+
+  Logger.log('Sarah Connor seeding completed.');
 }
 
 
@@ -458,6 +625,15 @@ function setLastSyncTimestamp(ss, timestamp) {
  * @return {number}
  */
 function getAthleteAge(ss) {
+  const playersSheet = ss.getSheetByName(TAB_PLAYERS);
+  if (playersSheet) {
+    const players = readTabAsObjects(ss, TAB_PLAYERS);
+    const primary = players.find(p => p.player_id === 'player-001');
+    if (primary && primary.athlete_age) {
+      const age = parseInt(primary.athlete_age, 10);
+      if (age > 0 && age < 120) return age;
+    }
+  }
   const configSheet = getTab(ss, TAB_CONFIG);
   if (!configSheet) return DEFAULT_ATHLETE_AGE;
 
@@ -482,12 +658,13 @@ function getAthleteAge(ss) {
  * @param  {Date}           since    Start of the time window (inclusive).
  * @return {Object[]}       Array of normalised session objects.
  */
-function fetchSessionsFromAPI(service, since) {
+function fetchSessionsFromAPI(service, since, timeZone) {
   const token = service.getAccessToken();
+  const tz = timeZone || Session.getScriptTimeZone();
 
   // Build filter using civil_start_time (required for exercise data type).
   // Format: ISO 8601 date string YYYY-MM-DD
-  const sinceDate = Utilities.formatDate(since, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  const sinceDate = Utilities.formatDate(since, tz, 'yyyy-MM-dd');
   const filter = 'exercise.interval.civil_start_time >= "' + sinceDate + '"';
 
   const url = EXERCISE_ENDPOINT
@@ -556,7 +733,7 @@ function fetchSessionsFromAPI(service, since) {
       const steps = Number(metrics.steps || exercise.steps || exercise.step_count || 0);
 
       allSessions.push({
-        date:             Utilities.formatDate(startDate, Session.getScriptTimeZone(), 'yyyy-MM-dd'),
+        date:             Utilities.formatDate(startDate, tz, 'yyyy-MM-dd'),
         activity_type:    'table_tennis',
         duration_minutes: durMins,
         source:           'Google Health / Fitbit',
@@ -754,78 +931,161 @@ function getExistingSessionKeys(sessionsSheet) {
  */
 function syncSessions() {
   const ss = getSpreadsheet();
+  const tz = ss.getSpreadsheetTimeZone();
+  appendLog(ss, 'INFO', 'Sync started (30-day window).');
 
   try {
-    // ── Step 1: Read checkpoint ──────────────────────────────────────────
-    const since = getLastSyncTimestamp(ss);
-    appendLog(ss, 'INFO', 'Sync started. Fetching sessions since ' + since.toISOString());
-
-    // ── Step 2: Authenticate ─────────────────────────────────────────────
+    // ── Step 1: Authenticate ─────────────────────────────────────────────
     const service = getHealthService();
-
     if (!service.hasAccess()) {
       appendLog(ss, 'ERROR', 'OAuth2 token missing or expired. Run showAuthUrl() to re-authorize.');
-      Logger.log('ERROR: Not authorized. Run showAuthUrl() to get the auth URL.');
       return;
     }
 
-    // ── Step 3 & 4: Fetch + filter ───────────────────────────────────────
-    let sessions;
+    // ── Step 2: Fetch all sessions from API for the last 30 days ──────────
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    let apiSessions;
     try {
-      sessions = fetchSessionsFromAPI(service, since);
+      apiSessions = fetchSessionsFromAPI(service, since, tz);
     } catch (apiErr) {
       appendLog(ss, 'ERROR', 'API fetch failed: ' + apiErr.message);
-      Logger.log('API error — checkpoint NOT updated. ' + apiErr.message);
-      return;   // Exit cleanly, do NOT update checkpoint.
+      return;
     }
 
-    appendLog(ss, 'INFO', 'API returned ' + sessions.length + ' table tennis session(s).');
+    appendLog(ss, 'INFO', 'API returned ' + apiSessions.length + ' table tennis session(s) in last 30 days.');
 
-    // ── Step 5: Deduplicate ──────────────────────────────────────────────
+    // Create a lookup set for API sessions: "date|duration"
+    const apiKeys = new Set(apiSessions.map(s => s.date + '|' + String(s.duration_minutes)));
+
+    // ── Step 3: Process Sessions tab (clean up deletions & get new keys) ──
     const sessionsSheet = getTab(ss, TAB_SESSIONS);
-
     if (!sessionsSheet) {
       appendLog(ss, 'ERROR', 'Sessions tab missing. Run setupSheet() first.');
       return;
     }
 
-    const existingKeys = getExistingSessionKeys(sessionsSheet);
+    const lastRowS = sessionsSheet.getLastRow();
+    const headersS = sessionsSheet.getRange(1, 1, 1, sessionsSheet.getLastColumn()).getValues()[0];
+    const idxPlayerId = headersS.indexOf('player_id');
+    const idxDate = headersS.indexOf('date');
+    const idxType = headersS.indexOf('activity_type');
+    const idxDuration = headersS.indexOf('duration_minutes');
+    const idxSource = headersS.indexOf('source');
+    const idxSyncedAt = headersS.indexOf('synced_at');
+    const idxCalories = headersS.indexOf('calories');
+    const idxSteps = headersS.indexOf('steps');
 
-    const newSessions = sessions.filter(s => {
+    const keptSessions = [];
+    const deletedSessionDates = new Set();    // For cleaning up HR logs
+    const deletedSessionKeys = new Set();     // For cleaning up feedback comments ("date|duration")
+    const existingKeys = new Set();
+
+    const cutoffStr = Utilities.formatDate(since, tz, 'yyyy-MM-dd');
+
+    if (lastRowS >= 2) {
+      const dataS = sessionsSheet.getRange(2, 1, lastRowS - 1, headersS.length).getValues();
+      for (const row of dataS) {
+        let rowDate = row[idxDate];
+        if (rowDate instanceof Date) {
+          rowDate = Utilities.formatDate(rowDate, tz, 'yyyy-MM-dd');
+        } else {
+          rowDate = String(rowDate);
+        }
+        const rowDuration = String(row[idxDuration]);
+        const rowSource = String(row[idxSource]);
+        const key = rowDate + '|' + rowDuration;
+
+        const isWithinWindow = rowDate >= cutoffStr;
+        const isFitbit = rowSource === 'Google Health / Fitbit';
+
+        if (isWithinWindow && isFitbit) {
+          if (apiKeys.has(key)) {
+            // Session still exists in Google Fit, keep it
+            keptSessions.push(row);
+            existingKeys.add(key);
+          } else {
+            // Session was deleted in Fitbit! Record key to clean up HR and Comments
+            deletedSessionDates.add(rowDate);
+            deletedSessionKeys.add(key);
+            appendLog(ss, 'INFO', 'Detected deleted session on ' + rowDate + ' (' + rowDuration + ' min). Removing.');
+          }
+        } else {
+          // Keep manual sessions or older historical sessions
+          keptSessions.push(row);
+          existingKeys.add(key);
+        }
+      }
+    }
+
+    // Filter out API sessions we don't have yet
+    const newSessions = apiSessions.filter(s => {
       const key = s.date + '|' + String(s.duration_minutes);
       return !existingKeys.has(key);
     });
 
-    // ── Step 6: Check for zero new ───────────────────────────────────────
-    if (newSessions.length === 0) {
-      appendLog(ss, 'INFO', 'No new sessions found. Nothing to write.');
-      Logger.log('No new sessions — done.');
-      // Still update checkpoint so the next run starts from now.
-      setLastSyncTimestamp(ss, new Date());
-      return;
+    // Append new sessions to kept sessions list
+    newSessions.forEach(s => {
+      const newRow = new Array(headersS.length);
+      if (idxPlayerId !== -1) newRow[idxPlayerId] = 'player-001';
+      if (idxDate !== -1) newRow[idxDate] = s.date;
+      if (idxType !== -1) newRow[idxType] = s.activity_type;
+      if (idxDuration !== -1) newRow[idxDuration] = s.duration_minutes;
+      if (idxSource !== -1) newRow[idxSource] = s.source;
+      if (idxSyncedAt !== -1) newRow[idxSyncedAt] = s.synced_at;
+      if (idxCalories !== -1) newRow[idxCalories] = s.calories || 0;
+      if (idxSteps !== -1) newRow[idxSteps] = s.steps || 0;
+      keptSessions.push(newRow);
+    });
+
+    // Rewrite Sessions sheet in bulk
+    if (lastRowS >= 2) {
+      sessionsSheet.getRange(2, 1, lastRowS - 1, headersS.length).clearContent();
+    }
+    if (keptSessions.length > 0) {
+      keptSessions.sort((a, b) => (a[idxDate] < b[idxDate] ? -1 : a[idxDate] > b[idxDate] ? 1 : 0));
+      sessionsSheet.getRange(2, 1, keptSessions.length, headersS.length).setValues(keptSessions);
     }
 
-    // ── Step 7: Append new sessions ──────────────────────────────────────
-    const rows = newSessions.map(s => [
-      s.date,
-      s.activity_type,
-      s.duration_minutes,
-      s.source,
-      s.synced_at,
-      s.calories || 0,
-      s.steps || 0
-    ]);
-
-    sessionsSheet.getRange(
-      sessionsSheet.getLastRow() + 1,
-      1,
-      rows.length,
-      rows[0].length
-    ).setValues(rows);
-
-    // ── Step 7b: Fetch heart rate data for new sessions ───────────────────
+    // ── Step 4: Process Heart Rate tab ───────────────────────────────────
     const hrSheet = getTab(ss, TAB_HEART_RATE);
     if (hrSheet) {
+      const lastRowHR = hrSheet.getLastRow();
+      const headersHR = hrSheet.getRange(1, 1, 1, hrSheet.getLastColumn()).getValues()[0];
+      const idxHrPlayerId = headersHR.indexOf('player_id');
+      const idxHrDate = headersHR.indexOf('date');
+      const idxHrAvg = headersHR.indexOf('avg_bpm');
+      const idxHrMax = headersHR.indexOf('max_bpm');
+      const idxHrMin = headersHR.indexOf('min_bpm');
+      const idxHrZ1 = headersHR.indexOf('zone1_mins');
+      const idxHrZ2 = headersHR.indexOf('zone2_mins');
+      const idxHrZ3 = headersHR.indexOf('zone3_mins');
+      const idxHrZ4 = headersHR.indexOf('zone4_mins');
+      const idxHrZ5 = headersHR.indexOf('zone5_mins');
+      const idxHrStart = headersHR.indexOf('start_time');
+      const idxHrEnd = headersHR.indexOf('end_time');
+
+      const keptHR = [];
+
+      if (lastRowHR >= 2) {
+        const dataHR = hrSheet.getRange(2, 1, lastRowHR - 1, headersHR.length).getValues();
+        for (const row of dataHR) {
+          let rowDate = row[idxHrDate];
+          if (rowDate instanceof Date) {
+            rowDate = Utilities.formatDate(rowDate, tz, 'yyyy-MM-dd');
+          } else {
+            rowDate = String(rowDate);
+          }
+
+          // Filter out HR rows for sessions that were deleted
+          if (!deletedSessionDates.has(rowDate)) {
+            keptHR.push(row);
+          } else {
+            appendLog(ss, 'INFO', 'Removing heart rate log for deleted session on ' + rowDate);
+          }
+        }
+      }
+
+      // Fetch HR data for newly added sessions
       const athleteAge = getAthleteAge(ss);
       let hrCount = 0;
 
@@ -836,47 +1096,95 @@ function syncSessions() {
 
           const hrPoints = fetchHeartRateDataPoints(service, start, end);
 
-          if (hrPoints.length === 0) {
-            appendLog(ss, 'INFO', 'No HR data found for session on ' + session.date);
-            continue;
-          }
-
-          const summary = computeHRSummary(hrPoints, athleteAge, session.duration_minutes);
-
-          if (summary) {
-            hrSheet.appendRow([
-              session.date,
-              summary.avgBpm,
-              summary.maxBpm,
-              summary.minBpm,
-              summary.zones.zone1_mins,
-              summary.zones.zone2_mins,
-              summary.zones.zone3_mins,
-              summary.zones.zone4_mins,
-              summary.zones.zone5_mins,
-              start,
-              end
-            ]);
-            hrCount++;
+          if (hrPoints.length > 0) {
+            const summary = computeHRSummary(hrPoints, athleteAge, session.duration_minutes);
+            if (summary) {
+              const newHrRow = new Array(headersHR.length);
+              if (idxHrPlayerId !== -1) newHrRow[idxHrPlayerId] = 'player-001';
+              if (idxHrDate !== -1) newHrRow[idxHrDate] = session.date;
+              if (idxHrAvg !== -1) newHrRow[idxHrAvg] = summary.avgBpm;
+              if (idxHrMax !== -1) newHrRow[idxHrMax] = summary.maxBpm;
+              if (idxHrMin !== -1) newHrRow[idxHrMin] = summary.minBpm;
+              if (idxHrZ1 !== -1) newHrRow[idxHrZ1] = summary.zones.zone1_mins;
+              if (idxHrZ2 !== -1) newHrRow[idxHrZ2] = summary.zones.zone2_mins;
+              if (idxHrZ3 !== -1) newHrRow[idxHrZ3] = summary.zones.zone3_mins;
+              if (idxHrZ4 !== -1) newHrRow[idxHrZ4] = summary.zones.zone4_mins;
+              if (idxHrZ5 !== -1) newHrRow[idxHrZ5] = summary.zones.zone5_mins;
+              if (idxHrStart !== -1) newHrRow[idxHrStart] = start;
+              if (idxHrEnd !== -1) newHrRow[idxHrEnd] = end;
+              keptHR.push(newHrRow);
+              hrCount++;
+            }
           }
         } catch (hrErr) {
           appendLog(ss, 'WARN', 'HR fetch failed for ' + session.date + ': ' + hrErr.message);
         }
       }
 
-      appendLog(ss, 'INFO', 'Heart rate data written for ' + hrCount + '/' + newSessions.length + ' session(s).');
+      // Rewrite Heart Rate sheet in bulk
+      if (lastRowHR >= 2) {
+        hrSheet.getRange(2, 1, lastRowHR - 1, headersHR.length).clearContent();
+      }
+      if (keptHR.length > 0) {
+        keptHR.sort((a, b) => (a[idxHrDate] < b[idxHrDate] ? -1 : a[idxHrDate] > b[idxHrDate] ? 1 : 0));
+        hrSheet.getRange(2, 1, keptHR.length, headersHR.length).setValues(keptHR);
+      }
+
+      appendLog(ss, 'INFO', 'Heart rate logs updated. Fetched ' + hrCount + ' new log(s).');
     }
 
-    // ── Step 8: Update checkpoint ────────────────────────────────────────
+    // ── Step 5: Process Feedback tab (clean up comments for deleted sessions)
+    const feedbackSheet = getTab(ss, TAB_FEEDBACK);
+    if (feedbackSheet) {
+      const lastRowF = feedbackSheet.getLastRow();
+      const headersF = feedbackSheet.getRange(1, 1, 1, feedbackSheet.getLastColumn()).getValues()[0];
+      const idxFPlayerId = headersF.indexOf('player_id');
+      const idxFSessionDate = headersF.indexOf('session_date');
+      const idxFSessionDuration = headersF.indexOf('session_duration');
+      const idxFComments = headersF.indexOf('coaches_comments');
+      const idxFDrills = headersF.indexOf('drills');
+
+      const keptFeedback = [];
+
+      if (lastRowF >= 2) {
+        const dataF = feedbackSheet.getRange(2, 1, lastRowF - 1, headersF.length).getValues();
+        for (const row of dataF) {
+          let rowDate = row[idxFSessionDate];
+          if (rowDate instanceof Date) {
+            rowDate = Utilities.formatDate(rowDate, tz, 'yyyy-MM-dd');
+          } else {
+            rowDate = String(rowDate);
+          }
+          const rowDuration = String(row[idxFSessionDuration]);
+          const key = rowDate + '|' + rowDuration;
+
+          // Filter out comments/drills for deleted sessions
+          if (!deletedSessionKeys.has(key)) {
+            keptFeedback.push(row);
+          } else {
+            appendLog(ss, 'INFO', 'Removing comments/drills details for deleted session on ' + rowDate);
+          }
+        }
+      }
+
+      // Rewrite Feedback sheet in bulk
+      if (lastRowF >= 2) {
+        feedbackSheet.getRange(2, 1, lastRowF - 1, headersF.length).clearContent();
+      }
+      if (keptFeedback.length > 0) {
+        keptFeedback.sort((a, b) => (a[idxFSessionDate] < b[idxFSessionDate] ? -1 : a[idxFSessionDate] > b[idxFSessionDate] ? 1 : 0));
+        feedbackSheet.getRange(2, 1, keptFeedback.length, headersF.length).setValues(keptFeedback);
+      }
+    }
+
+    // ── Step 6: Update sync trigger checkpoint ───────────────────────────
     setLastSyncTimestamp(ss, new Date());
 
-    // ── Step 9: Log summary ──────────────────────────────────────────────
-    const summary = 'Sync complete. ' + newSessions.length + ' new session(s) written.';
+    const summary = 'Sync complete. Processed ' + apiSessions.length + ' sessions. Added ' + newSessions.length + ' new session(s).';
     appendLog(ss, 'INFO', summary);
     Logger.log(summary);
 
   } catch (err) {
-    // Catch-all: log unexpected errors, do NOT update checkpoint.
     appendLog(ss, 'ERROR', 'Unexpected error: ' + err.message);
     Logger.log('FATAL: ' + err.message + '\n' + err.stack);
   }
@@ -916,11 +1224,31 @@ function doGet(e) {
       ss = getSpreadsheet();
     }
 
+    // Auto-trigger setupSheet() if Players sheet doesn't exist
+    if (!ss.getSheetByName(TAB_PLAYERS)) {
+      setupSheet();
+    }
+
+    // Helper to read and strip access_code
+    function readAndSanitizeTab(tabName, codeField) {
+      const list = readTabAsObjects(ss, tabName);
+      return list.map(item => {
+        if (item.hasOwnProperty(codeField)) {
+          delete item[codeField];
+        }
+        return item;
+      });
+    }
+
     const payload = {
       rubber_sheets:       readTabAsObjects(ss, TAB_RUBBER_SHEETS),
       blades:              readTabAsObjects(ss, TAB_BLADES),
       sessions:            readTabAsObjects(ss, TAB_SESSIONS),
-      heart_rate_sessions: readTabAsObjects(ss, TAB_HEART_RATE)
+      heart_rate_sessions: readTabAsObjects(ss, TAB_HEART_RATE),
+      feedback:            readTabAsObjects(ss, TAB_FEEDBACK),
+      players:             readAndSanitizeTab(TAB_PLAYERS, 'access_code'),
+      coaches:             readAndSanitizeTab(TAB_COACHES, 'access_code'),
+      parents:             readAndSanitizeTab(TAB_PARENTS, 'access_code')
     };
 
     return ContentService
@@ -949,16 +1277,13 @@ function doGet(e) {
  */
 function readTabAsObjects(ss, name) {
   const sheet = getTab(ss, name);
-
   if (!sheet) return [];
 
-  const lastRow = sheet.getLastRow();
-  const lastCol = sheet.getLastColumn();
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) return [];   // Only headers or empty.
 
-  if (lastRow < 2 || lastCol < 1) return [];   // Only headers or empty.
-
-  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
-  const data    = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+  const headers = values[0];
+  const data    = values.slice(1);
 
   return data.map(row => {
     const obj = {};
@@ -967,7 +1292,7 @@ function readTabAsObjects(ss, name) {
 
       // Convert Date objects to ISO strings for JSON transport.
       if (val instanceof Date) {
-        val = Utilities.formatDate(val, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+        val = Utilities.formatDate(val, ss.getSpreadsheetTimeZone(), 'yyyy-MM-dd');
       }
 
       obj[header] = val;
@@ -1061,7 +1386,7 @@ function debugHeartRate() {
   const lastDate = sessionsSheet.getRange(lastRow, 1).getValue();
   let dateStr;
   if (lastDate instanceof Date) {
-    dateStr = Utilities.formatDate(lastDate, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+    dateStr = Utilities.formatDate(lastDate, ss.getSpreadsheetTimeZone(), 'yyyy-MM-dd');
   } else {
     dateStr = String(lastDate);
   }
@@ -1208,4 +1533,191 @@ function clearAndReSync() {
   setLastSyncTimestamp(ss, new Date('2026-03-20T00:00:00Z'));
   
   Logger.log('Cleared sessions and reset checkpoint. Now run syncSessions() to fetch all sessions.');
+}
+
+/**
+ * Serves POST requests to update coaching comments and training breakdowns.
+ *
+ * Request body must be a JSON string with format:
+ * {
+ *   "action": "save_feedback",
+ *   "session_date": "YYYY-MM-DD",
+ *   "session_duration": 60,
+ *   "coaches_comments": "...",
+ *   "drills": "JSON_string"
+ * }
+ */
+function doPost(e) {
+  try {
+    const postData = JSON.parse(e.postData.contents);
+    const action = postData.action;
+
+    if (action === 'login') {
+      const username = String(postData.username || postData.email || '').trim().toLowerCase();
+      const accessCode = String(postData.access_code || '').trim();
+
+      if (!username || !accessCode) {
+        throw new Error('Missing username or access_code');
+      }
+
+      let ss = getSpreadsheet();
+      let foundUser = null;
+      let userRole = '';
+      let idField = '';
+
+      // 1. Search Players
+      const players = readTabAsObjects(ss, TAB_PLAYERS);
+      foundUser = players.find(u => {
+        const uEmail = String(u.email || '').trim().toLowerCase();
+        const uName = String(u.name || '').trim().toLowerCase();
+        const uCode = String(u.access_code || '').trim();
+        return (uEmail === username || uName === username) && uCode === accessCode;
+      });
+      if (foundUser) {
+        userRole = 'player';
+        idField = 'player_id';
+      }
+
+      // 2. Search Coaches (if not found in players)
+      if (!foundUser) {
+        const coaches = readTabAsObjects(ss, TAB_COACHES);
+        foundUser = coaches.find(u => {
+          const uEmail = String(u.email || '').trim().toLowerCase();
+          const uName = String(u.name || '').trim().toLowerCase();
+          const uCode = String(u.access_code || '').trim();
+          return (uEmail === username || uName === username) && uCode === accessCode;
+        });
+        if (foundUser) {
+          userRole = 'coach';
+          idField = 'coach_id';
+        }
+      }
+
+      // 3. Search Parents (if not found in players or coaches)
+      if (!foundUser) {
+        const parents = readTabAsObjects(ss, TAB_PARENTS);
+        foundUser = parents.find(u => {
+          const uEmail = String(u.email || '').trim().toLowerCase();
+          const uName = String(u.name || '').trim().toLowerCase();
+          const uCode = String(u.access_code || '').trim();
+          return (uEmail === username || uName === username) && uCode === accessCode;
+        });
+        if (foundUser) {
+          userRole = 'parent';
+          idField = 'parent_id';
+        }
+      }
+
+      if (!foundUser) {
+        return ContentService
+          .createTextOutput(JSON.stringify({ success: false, message: 'Invalid name or access code.' }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+
+      // Construct safe user object
+      const userObj = {
+        id: foundUser[idField],
+        name: foundUser.name,
+        email: foundUser.email,
+        role: userRole
+      };
+
+      if (userRole === 'player') {
+        userObj.default_lifespan = foundUser.default_lifespan;
+        userObj.athlete_age = foundUser.athlete_age;
+      } else if (userRole === 'parent') {
+        userObj.linked_player_ids = foundUser.linked_player_ids;
+      }
+
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: true, user: userObj }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (action !== 'save_feedback') {
+      throw new Error('Unsupported action: ' + action);
+    }
+
+    const playerId = postData.player_id || 'player-001';
+    const sessionDate = postData.session_date;
+    const sessionDuration = parseInt(postData.session_duration, 10);
+    const coachesComments = postData.coaches_comments || '';
+    const drills = postData.drills || '[]';
+
+    if (!sessionDate || isNaN(sessionDuration)) {
+      throw new Error('Missing session_date or session_duration');
+    }
+
+    let ss = getSpreadsheet();
+    let sheet = ss.getSheetByName(TAB_FEEDBACK);
+    if (!sheet) {
+      sheet = ss.insertSheet(TAB_FEEDBACK);
+      sheet.appendRow(['player_id', 'session_date', 'session_duration', 'coaches_comments', 'drills']);
+      sheet.getRange(1, 1, 1, 5).setFontWeight('bold');
+    }
+
+    const lastRow = sheet.getLastRow();
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const idxPlayerId = headers.indexOf('player_id');
+    const idxSessionDate = headers.indexOf('session_date');
+    const idxSessionDuration = headers.indexOf('session_duration');
+    const idxCoachesComments = headers.indexOf('coaches_comments');
+    const idxDrills = headers.indexOf('drills');
+
+    let foundRowIndex = -1;
+
+    if (lastRow >= 2) {
+      const data = sheet.getRange(2, 1, lastRow - 1, headers.length).getValues();
+      for (let i = 0; i < data.length; i++) {
+        const row = data[i];
+        const rowPlayer = String(row[idxPlayerId]);
+        let rowDate = row[idxSessionDate];
+        if (rowDate instanceof Date) {
+          rowDate = Utilities.formatDate(rowDate, ss.getSpreadsheetTimeZone(), 'yyyy-MM-dd');
+        } else {
+          rowDate = String(rowDate);
+        }
+        const rowDuration = parseInt(row[idxSessionDuration], 10);
+
+        if (rowPlayer === playerId && rowDate === sessionDate && rowDuration === sessionDuration) {
+          foundRowIndex = i + 2;
+          break;
+        }
+      }
+    }
+
+    if (foundRowIndex !== -1) {
+      // Update existing row
+      sheet.getRange(foundRowIndex, idxCoachesComments + 1).setValue(coachesComments);
+      sheet.getRange(foundRowIndex, idxDrills + 1).setValue(drills);
+    } else {
+      // Append new row in order of headers
+      const newRow = new Array(headers.length);
+      if (idxPlayerId !== -1) newRow[idxPlayerId] = playerId;
+      if (idxSessionDate !== -1) newRow[idxSessionDate] = sessionDate;
+      if (idxSessionDuration !== -1) newRow[idxSessionDuration] = sessionDuration;
+      if (idxCoachesComments !== -1) newRow[idxCoachesComments] = coachesComments;
+      if (idxDrills !== -1) newRow[idxDrills] = drills;
+      sheet.appendRow(newRow);
+    }
+
+    const payload = {
+      success: true,
+      message: 'Feedback saved successfully.'
+    };
+
+    return ContentService
+      .createTextOutput(JSON.stringify(payload))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    const errorPayload = {
+      error: true,
+      message: err.message
+    };
+
+    return ContentService
+      .createTextOutput(JSON.stringify(errorPayload))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 }
