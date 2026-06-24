@@ -5,13 +5,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>About — TTInsights</title>
-  <meta name="description" content="Learn more about the developer and how TTInsights helps players monitor their equipment and training." />
+  <meta name="description"
+    content="Learn more about the developer and how TTInsights helps players monitor their equipment and training." />
   <meta name="theme-color" content="#0b0e1a" />
 
-  <!-- Google Fonts — Inter -->
+  <!-- Google Fonts — Space Grotesk & Manrope -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
 
   <!-- Dashboard Stylesheet -->
   <link rel="stylesheet" href="styles.css" />
@@ -31,41 +34,61 @@
         <a href="index.html?tab=coaching" class="nav-link">Coaching Feedback</a>
         <a href="about.html" class="nav-link nav-link--active">About</a>
       </nav>
-      <div class="header__controls" style="visibility: hidden;">
-        <select class="select-dark" aria-hidden="true">
-          <option>Placeholder</option>
-        </select>
+      <div class="header__controls">
+        <div id="user-profile-badge" class="header__control-item user-profile-badge hidden"
+          style="display:flex; align-items:center; gap:8px;">
+          <span id="user-profile-name" class="user-profile-name"
+            style="font-size:0.85rem; color:var(--text-primary); font-weight:500;"></span>
+          <button id="btn-logout" class="btn btn--logout" title="Log Out" aria-label="Log Out"
+            style="background:none; border:none; padding:4px; color:var(--text-secondary); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:color 0.2s;">
+            <svg class="logout-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+          </button>
+        </div>
       </div>
     </header>
 
     <!-- ====== About Content ====== -->
     <main class="about-main">
       <div class="about-grid">
-        
+
         <!-- Profile Card (Left Column) -->
         <article class="glass-card about-card profile-showcase">
           <div class="profile-showcase__header">
-            <div class="profile-showcase__avatar">MG</div>
+            <img src="michael_guo_nctta.jpg" alt="Michael Guo profile" class="profile-showcase__avatar" />
             <div>
               <h2 class="profile-showcase__name">Michael Guo</h2>
-              <p class="profile-showcase__sub">UT Austin · Stats &amp; Data Science</p>
+              <p class="profile-showcase__sub">UT Austin · Stats &amp; Data Science Major</p>
               <span class="usatt-badge">USATT 2382</span>
             </div>
           </div>
           <div class="profile-showcase__body">
             <p class="profile-showcase__desc">
-              I am a calm table tennis player who wants to help the table tennis community with my vibe coding skills. By combining my statistics and data science background with modern web development, I build tools that make athletic tracking accessible, insightful, and easy to use.
+              After stop playing table tennis for real for some time and only coming back recently, my local table
+              tennis clubs in Katy inspiried me to build a tracking web app for students, parents, and coaches. So with
+              my data science and vibe coding skills, I built this web app where athletes can see insightful data that
+              can help them improve and track their progress.
             </p>
           </div>
           <div class="profile-showcase__footer">
-            <a href="https://github.com/michaelguo07" target="_blank" class="bio-social-link" aria-label="GitHub Profile">
-              <svg class="social-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+            <a href="https://github.com/michaelguo07" target="_blank" class="bio-social-link"
+              aria-label="GitHub Profile">
+              <svg class="social-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22">
+                </path>
               </svg>
               <span>michaelguo07</span>
             </a>
-            <a href="https://instagram.com/guobropro" target="_blank" class="bio-social-link" aria-label="Instagram Profile">
-              <svg class="social-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <a href="https://instagram.com/guobropro" target="_blank" class="bio-social-link"
+              aria-label="Instagram Profile">
+              <svg class="social-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
                 <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
                 <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
                 <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
@@ -79,21 +102,35 @@
         <article class="glass-card about-card project-showcase">
           <h2 class="project-showcase__title">About the Application</h2>
           <div class="project-showcase__section">
-            <h3>🏓 Equipment Tracking</h3>
-          <p>
-              Table tennis rubber sheets degrade over time as they are exposed to friction, dust, and light. TTInsights monitors cumulative training time logged on each active rubber sheet, allowing athletes to replace their equipment before performance drops.
+            <h3>Equipment Tracking</h3>
+            <p>
+              Table tennis rubbers are expensive. And the fact that most beginners need to consult a coach to see
+              whether they need to switch rubbers is a hassle. So TTInsights montiors their training time and logs the
+              time played with thier rubber. Then it will see the next time the athlete switches rubber, creating a
+              personalized timelime of when you should switch rubbers.
             </p>
           </div>
           <div class="project-showcase__section">
-            <h3>⚡ Health &amp; Fitness Analytics</h3>
+            <h3>Health Analysis</h3>
             <p>
-              Integrates with the <strong>Google Health API v4</strong> (Fitbit / Pixel Watch) to extract training sessions, heart rate intensity zones, active calories expended, and steps taken during table tennis play. This helps players analyze physical load and optimize recovery.
+              Integrates with the <strong>Google Health API v4</strong> (Fitbit / Pixel Watch / Apple Watch) to extract
+              training sessions, heart rate intensity zones, active calories expended, and steps taken during table
+              tennis play. This helps players analyze physical load and optimize recovery.
             </p>
           </div>
           <div class="project-showcase__section">
-            <h3>🔍 Anomaly &amp; Trend Detection</h3>
+            <h3>Trend Finder</h3>
             <p>
-              Provides automated scanning for session inconsistencies (such as abnormally short/long training logs) and gaps in practice frequency. This keeps training schedules transparent and consistent.
+              Provides automated scanning for session inconsistencies (such as abnormally short/long training logs) and
+              gaps in practice frequency. This keeps training schedules transparent and consistent.
+            </p>
+          </div>
+          <div class="project-showcase__section">
+            <h3>Coach and Parent Integration</h3>
+            <p>
+              Includes a student/parent/coach portal so everyone can see the same data and insights. This ensures
+              everyone can monitor the athlete's training and equipment health, leading to better communication and
+              decision-making.
             </p>
           </div>
         </article>
@@ -102,6 +139,36 @@
     </main>
 
   </div>
+
+  <!-- Dynamic User Session Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const storedUser = localStorage.getItem('rubber_tracker_user');
+      if (storedUser) {
+        try {
+          const user = JSON.parse(storedUser);
+          const elBadge = document.getElementById('user-profile-badge');
+          const elName = document.getElementById('user-profile-name');
+          if (elBadge && elName) {
+            elName.textContent = `${user.name} (${user.role.toUpperCase()})`;
+            elBadge.classList.remove('hidden');
+          }
+        } catch (e) {
+          console.error('Failed to parse user session on about page', e);
+        }
+      }
+
+      const btnLogout = document.getElementById('btn-logout');
+      if (btnLogout) {
+        btnLogout.addEventListener('click', (e) => {
+          e.preventDefault();
+          localStorage.removeItem('rubber_tracker_user');
+          localStorage.removeItem('rubber_tracker_cached_data');
+          window.location.href = 'index.html';
+        });
+      }
+    });
+  </script>
 </body>
 
 </html>

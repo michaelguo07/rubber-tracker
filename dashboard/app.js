@@ -1118,8 +1118,8 @@ function chartOptions(yLabel) {
         borderWidth: 1,
         cornerRadius: 8,
         padding: 12,
-        titleFont: { family: 'Inter', weight: '600' },
-        bodyFont: { family: 'Inter' },
+        titleFont: { family: 'Space Grotesk', weight: '700' },
+        bodyFont: { family: 'Manrope' },
         callbacks: {
           label(ctx) {
             const v = ctx.parsed.y;
@@ -1134,7 +1134,7 @@ function chartOptions(yLabel) {
       x: {
         ticks: {
           color: '#505a78',
-          font: { family: 'Inter', size: 10 },
+          font: { family: 'Manrope', size: 10 },
           maxRotation: 45,
           maxTicksLimit: 12,
         },
@@ -1147,11 +1147,11 @@ function chartOptions(yLabel) {
           display: true,
           text: yLabel,
           color: '#505a78',
-          font: { family: 'Inter', size: 11, weight: '500' },
+          font: { family: 'Space Grotesk', size: 11, weight: '700' },
         },
         ticks: {
           color: '#505a78',
-          font: { family: 'Inter', size: 10 },
+          font: { family: 'Manrope', size: 10 },
         },
         grid: { color: 'rgba(255,255,255,0.04)' },
         border: { color: 'rgba(255,255,255,0.06)' },
@@ -1430,7 +1430,7 @@ function renderHRTrendChart(hrSessions) {
           position: 'top',
           labels: {
             color: '#8b95b0',
-            font: { family: 'Inter', size: 10, weight: '500' }
+            font: { family: 'Manrope', size: 10, weight: '500' }
           }
         },
         tooltip: {
@@ -1441,29 +1441,29 @@ function renderHRTrendChart(hrSessions) {
           borderWidth: 1,
           cornerRadius: 8,
           padding: 12,
-          titleFont: { family: 'Inter', weight: '600' },
-          bodyFont: { family: 'Inter' }
+          titleFont: { family: 'Space Grotesk', weight: '700' },
+          bodyFont: { family: 'Manrope' }
         }
       },
       scales: {
         x: {
           ticks: {
             color: '#505a78',
-            font: { family: 'Inter', size: 9 }
+            font: { family: 'Manrope', size: 9 }
           },
           grid: { display: false }
         },
         y: {
           ticks: {
             color: '#505a78',
-            font: { family: 'Inter', size: 9 }
+            font: { family: 'Manrope', size: 9 }
           },
           grid: { color: 'rgba(80, 90, 120, 0.08)' },
           title: {
             display: true,
             text: 'BPM',
             color: '#8b95b0',
-            font: { family: 'Inter', size: 9, weight: '500' }
+            font: { family: 'Space Grotesk', size: 9, weight: '700' }
           }
         }
       }
@@ -1669,7 +1669,7 @@ function renderDrillDistributionChart(drillStats) {
           position: 'right',
           labels: {
             color: '#9ca3af',
-            font: { family: 'Inter', size: 10 },
+            font: { family: 'Manrope', size: 10 },
             padding: 8,
             boxWidth: 10
           }
@@ -1682,8 +1682,8 @@ function renderDrillDistributionChart(drillStats) {
           borderWidth: 1,
           cornerRadius: 8,
           padding: 10,
-          titleFont: { family: 'Inter', weight: '600' },
-          bodyFont: { family: 'Inter' },
+          titleFont: { family: 'Space Grotesk', weight: '700' },
+          bodyFont: { family: 'Manrope' },
           callbacks: {
             label(ctx) {
               const val = ctx.parsed;
