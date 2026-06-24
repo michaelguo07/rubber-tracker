@@ -172,12 +172,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     elSheetSelect.addEventListener('change', () => {
       console.log('Rubber sheet dropdown changed. Selected ID:', elSheetSelect.value);
       if (appData) {
-        try {
-          renderAll(appData, elSheetSelect.value || undefined);
-        } catch (err) {
-          console.error('Error rendering selected sheet:', err);
-          showError('Failed to display stats for selected sheet: ' + err.message);
-        }
+        showLoader();
+        setTimeout(() => {
+          try {
+            renderAll(appData, elSheetSelect.value || undefined);
+          } catch (err) {
+            console.error('Error rendering selected sheet:', err);
+            showError('Failed to display stats for selected sheet: ' + err.message);
+          } finally {
+            hideLoader();
+          }
+        }, 300);
       } else {
         console.warn('Cannot render: appData is null');
       }
