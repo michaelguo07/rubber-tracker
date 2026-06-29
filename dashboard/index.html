@@ -154,55 +154,52 @@
             <p class="stat-card__sub" id="stat-rubber-health-sub">&nbsp;</p>
           </div>
         </article>
+        <article class="glass-card stat-card" id="stat-total-time">
+          <p class="stat-card__label">Total Play Time</p>
+          <p class="stat-card__value stat-card__value--accent" id="stat-total-time-value">—</p>
+          <p class="stat-card__sub" id="stat-total-time-sub">&nbsp;</p>
+        </article>
+        <article class="glass-card stat-card" id="stat-sessions">
+          <p class="stat-card__label">Sessions Logged</p>
+          <p class="stat-card__value" id="stat-sessions-value">—</p>
+          <p class="stat-card__sub" id="stat-sessions-sub">&nbsp;</p>
+        </article>
+        <article class="glass-card stat-card" id="stat-avg-session">
+          <p class="stat-card__label">Avg Session</p>
+          <p class="stat-card__value" id="stat-avg-session-value">—</p>
+          <p class="stat-card__sub">minutes per session</p>
+        </article>
+        <article class="glass-card stat-card" id="stat-days-install">
+          <p class="stat-card__label">Days Since Install</p>
+          <p class="stat-card__value" id="stat-days-install-value">—</p>
+          <p class="stat-card__sub" id="stat-days-install-sub">&nbsp;</p>
+        </article>
+        <article class="glass-card stat-card" id="stat-frequency">
+          <p class="stat-card__label">Play Frequency</p>
+          <p class="stat-card__value" id="stat-frequency-value">—</p>
+          <p class="stat-card__sub">sessions / week</p>
+        </article>
+        <article class="glass-card stat-card" id="stat-date-range">
+          <p class="stat-card__label">Date Range</p>
+          <p class="stat-card__value" id="stat-date-range-value" style="font-size:1.1rem;">—</p>
+          <p class="stat-card__sub" id="stat-date-range-sub">&nbsp;</p>
+        </article>
+        <article class="glass-card stat-card" id="stat-weekly-time">
+          <p class="stat-card__label">Weekly Play Time</p>
+          <p class="stat-card__value stat-card__value--accent" id="stat-weekly-time-value">—</p>
+          <p class="stat-card__sub" id="stat-weekly-time-sub">&nbsp;</p>
+        </article>
+        <article class="glass-card stat-card" id="stat-weekly-calories">
+          <p class="stat-card__label">Weekly Calories</p>
+          <p class="stat-card__value stat-card__value--calories" id="stat-weekly-calories-value">—</p>
+          <p class="stat-card__sub" id="stat-weekly-calories-sub">&nbsp;</p>
+        </article>
+        <article class="glass-card stat-card" id="stat-weekly-steps">
+          <p class="stat-card__label">Weekly Steps</p>
+          <p class="stat-card__value stat-card__value--steps" id="stat-weekly-steps-value">—</p>
+          <p class="stat-card__sub" id="stat-weekly-steps-sub">&nbsp;</p>
+        </article>
 
-        <!-- Stats Grid -->
-        <section class="stats-grid" aria-label="Key statistics">
-          <article class="glass-card stat-card" id="stat-total-time">
-            <p class="stat-card__label">Total Play Time</p>
-            <p class="stat-card__value stat-card__value--accent" id="stat-total-time-value">—</p>
-            <p class="stat-card__sub" id="stat-total-time-sub">&nbsp;</p>
-          </article>
-          <article class="glass-card stat-card" id="stat-sessions">
-            <p class="stat-card__label">Sessions Logged</p>
-            <p class="stat-card__value" id="stat-sessions-value">—</p>
-            <p class="stat-card__sub" id="stat-sessions-sub">&nbsp;</p>
-          </article>
-          <article class="glass-card stat-card" id="stat-avg-session">
-            <p class="stat-card__label">Avg Session</p>
-            <p class="stat-card__value" id="stat-avg-session-value">—</p>
-            <p class="stat-card__sub">minutes per session</p>
-          </article>
-          <article class="glass-card stat-card" id="stat-days-install">
-            <p class="stat-card__label">Days Since Install</p>
-            <p class="stat-card__value" id="stat-days-install-value">—</p>
-            <p class="stat-card__sub" id="stat-days-install-sub">&nbsp;</p>
-          </article>
-          <article class="glass-card stat-card" id="stat-frequency">
-            <p class="stat-card__label">Play Frequency</p>
-            <p class="stat-card__value" id="stat-frequency-value">—</p>
-            <p class="stat-card__sub">sessions / week</p>
-          </article>
-          <article class="glass-card stat-card" id="stat-date-range">
-            <p class="stat-card__label">Date Range</p>
-            <p class="stat-card__value" id="stat-date-range-value" style="font-size:1.1rem;">—</p>
-            <p class="stat-card__sub" id="stat-date-range-sub">&nbsp;</p>
-          </article>
-          <article class="glass-card stat-card" id="stat-weekly-time">
-            <p class="stat-card__label">Weekly Play Time</p>
-            <p class="stat-card__value stat-card__value--accent" id="stat-weekly-time-value">—</p>
-            <p class="stat-card__sub" id="stat-weekly-time-sub">&nbsp;</p>
-          </article>
-          <article class="glass-card stat-card" id="stat-weekly-calories">
-            <p class="stat-card__label">Weekly Calories</p>
-            <p class="stat-card__value stat-card__value--calories" id="stat-weekly-calories-value">—</p>
-            <p class="stat-card__sub" id="stat-weekly-calories-sub">&nbsp;</p>
-          </article>
-          <article class="glass-card stat-card" id="stat-weekly-steps">
-            <p class="stat-card__label">Weekly Steps</p>
-            <p class="stat-card__value stat-card__value--steps" id="stat-weekly-steps-value">—</p>
-            <p class="stat-card__sub" id="stat-weekly-steps-sub">&nbsp;</p>
-          </article>
-        </section>
 
         <!-- ====== Heart Rate Zones ====== -->
         <section class="hr-section" id="hr-section" aria-label="Heart Rate Tracking">
@@ -237,20 +234,22 @@
             </article>
           </div>
 
-          <!-- Zone Breakdown -->
-          <article class="glass-card hr-zones-card" id="hr-zones-card">
-            <h3 class="hr-zones-card__title">Zone Breakdown</h3>
-            <div class="hr-zone-bars" id="hr-zone-bars"></div>
-            <p class="hr-zone-total" id="hr-zone-total"></p>
-          </article>
+          <div class="hr-grid">
+            <!-- Zone Breakdown -->
+            <article class="glass-card hr-zones-card" id="hr-zones-card">
+              <h3 class="hr-zones-card__title">Zone Breakdown</h3>
+              <div class="hr-zone-bars" id="hr-zone-bars"></div>
+              <p class="hr-zone-total" id="hr-zone-total"></p>
+            </article>
 
-          <!-- Heart Rate Trend Chart -->
-          <article class="glass-card hr-chart-card" id="hr-chart-card">
-            <h3 class="hr-zones-card__title">Heart Rate Intensity History</h3>
-            <div class="chart-card__canvas-wrap" style="height: 220px;">
-              <canvas id="chart-hr-trend"></canvas>
-            </div>
-          </article>
+            <!-- Heart Rate Trend Chart -->
+            <article class="glass-card hr-chart-card" id="hr-chart-card">
+              <h3 class="hr-zones-card__title">Heart Rate Intensity History</h3>
+              <div class="chart-card__canvas-wrap" style="height: 220px;">
+                <canvas id="chart-hr-trend"></canvas>
+              </div>
+            </article>
+          </div>
 
           <!-- HR No-Data State -->
           <div class="hr-empty-state hidden" id="hr-empty-state">
@@ -306,6 +305,15 @@
           <p class="coaching-feed-card__sub">Select a session to view details and feedback</p>
           <div id="coaching-session-list" class="coaching-session-list">
             <!-- Dynamically populated session items -->
+          </div>
+        </article>
+
+        <!-- Drill Distribution Chart Card -->
+        <article class="glass-card coaching-feed-card" style="margin-top: 24px;">
+          <h2 class="coaching-feed-card__title">📊 Drill Distribution</h2>
+          <p class="coaching-feed-card__sub">Overall training drill time allocation</p>
+          <div class="chart-card__canvas-wrap" style="height: 180px; margin-top: 14px;">
+            <canvas id="chart-drill-distribution"></canvas>
           </div>
         </article>
         

@@ -1056,8 +1056,8 @@ function renderCumulativeChart(data) {
 
   // Gradient fill under line
   const gradient = ctx.createLinearGradient(0, 0, 0, canvas.parentElement.clientHeight || 300);
-  gradient.addColorStop(0, 'rgba(255, 107, 0, 0.30)');
-  gradient.addColorStop(0.6, 'rgba(255, 107, 0, 0.06)');
+  gradient.addColorStop(0, 'rgba(255, 107, 0, 0.25)');
+  gradient.addColorStop(0.6, 'rgba(255, 107, 0, 0.05)');
   gradient.addColorStop(1, 'rgba(255, 107, 0, 0.00)');
 
   cumulativeChart = new Chart(ctx, {
@@ -1071,7 +1071,7 @@ function renderCumulativeChart(data) {
         backgroundColor: gradient,
         borderWidth: 2.5,
         pointBackgroundColor: '#ff6b00',
-        pointBorderColor: '#08090d',
+        pointBorderColor: '#02040a',
         pointBorderWidth: 2,
         pointRadius: 3,
         pointHoverRadius: 6,
@@ -1094,8 +1094,8 @@ function renderSessionChart(data) {
 
   // Per-bar gradient
   const gradient = ctx.createLinearGradient(0, 0, 0, canvas.parentElement.clientHeight || 300);
-  gradient.addColorStop(0, 'rgba(255, 107, 0, 0.85)');
-  gradient.addColorStop(1, 'rgba(255, 255, 255, 0.20)');
+  gradient.addColorStop(0, '#ff8c3b');
+  gradient.addColorStop(1, 'rgba(255, 107, 0, 0.15)');
 
   sessionChart = new Chart(ctx, {
     type: 'bar',
@@ -1105,7 +1105,7 @@ function renderSessionChart(data) {
         label: 'Duration (min)',
         data: data.map((d) => d.duration_minutes),
         backgroundColor: gradient,
-        borderColor: 'rgba(255, 107, 0, 0.50)',
+        borderColor: 'rgba(255, 107, 0, 0.40)',
         borderWidth: 1,
         borderRadius: 6,
         borderSkipped: false,
@@ -1134,9 +1134,9 @@ function chartOptions(yLabel) {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: 'rgba(14, 16, 22, 0.95)',
+        backgroundColor: 'rgba(10, 16, 32, 0.95)',
         titleColor: '#ffffff',
-        bodyColor: '#9ca3af',
+        bodyColor: '#94a3b8',
         borderColor: 'rgba(255, 107, 0, 0.25)',
         borderWidth: 1,
         cornerRadius: 8,
@@ -1156,28 +1156,28 @@ function chartOptions(yLabel) {
     scales: {
       x: {
         ticks: {
-          color: '#505a78',
+          color: '#94a3b8',
           font: { family: 'Manrope', size: 10 },
           maxRotation: 45,
           maxTicksLimit: 12,
         },
-        grid: { color: 'rgba(255,255,255,0.04)' },
-        border: { color: 'rgba(255,255,255,0.06)' },
+        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+        border: { color: 'rgba(255, 255, 255, 0.08)' },
       },
       y: {
         beginAtZero: true,
         title: {
           display: true,
           text: yLabel,
-          color: '#505a78',
+          color: '#94a3b8',
           font: { family: 'Space Grotesk', size: 11, weight: '700' },
         },
         ticks: {
-          color: '#505a78',
+          color: '#94a3b8',
           font: { family: 'Manrope', size: 10 },
         },
-        grid: { color: 'rgba(255,255,255,0.04)' },
-        border: { color: 'rgba(255,255,255,0.06)' },
+        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+        border: { color: 'rgba(255, 255, 255, 0.08)' },
       },
     },
   };
@@ -1419,7 +1419,7 @@ function renderHRTrendChart(hrSessions) {
           backgroundColor: 'transparent',
           borderWidth: 2,
           pointBackgroundColor: '#f97316',
-          pointBorderColor: '#0b0e1a',
+          pointBorderColor: '#02040a',
           pointBorderWidth: 1.5,
           pointRadius: 4,
           pointHoverRadius: 6,
@@ -1432,7 +1432,7 @@ function renderHRTrendChart(hrSessions) {
           backgroundColor: 'transparent',
           borderWidth: 2,
           pointBackgroundColor: '#ef4444',
-          pointBorderColor: '#0b0e1a',
+          pointBorderColor: '#02040a',
           pointBorderWidth: 1.5,
           pointRadius: 4,
           pointHoverRadius: 6,
@@ -1452,14 +1452,14 @@ function renderHRTrendChart(hrSessions) {
           display: true,
           position: 'top',
           labels: {
-            color: '#8b95b0',
-            font: { family: 'Manrope', size: 10, weight: '500' }
+            color: '#94a3b8',
+            font: { family: 'Manrope', size: 10, weight: '600' }
           }
         },
         tooltip: {
-          backgroundColor: 'rgba(14, 16, 22, 0.95)',
+          backgroundColor: 'rgba(10, 16, 32, 0.95)',
           titleColor: '#ffffff',
-          bodyColor: '#9ca3af',
+          bodyColor: '#94a3b8',
           borderColor: 'rgba(255, 107, 0, 0.25)',
           borderWidth: 1,
           cornerRadius: 8,
@@ -1471,22 +1471,22 @@ function renderHRTrendChart(hrSessions) {
       scales: {
         x: {
           ticks: {
-            color: '#505a78',
+            color: '#94a3b8',
             font: { family: 'Manrope', size: 9 }
           },
           grid: { display: false }
         },
         y: {
           ticks: {
-            color: '#505a78',
+            color: '#94a3b8',
             font: { family: 'Manrope', size: 9 }
           },
-          grid: { color: 'rgba(80, 90, 120, 0.08)' },
+          grid: { color: 'rgba(255, 255, 255, 0.05)' },
           title: {
             display: true,
             text: 'BPM',
-            color: '#8b95b0',
-            font: { family: 'Space Grotesk', size: 9, weight: '700' }
+            color: '#94a3b8',
+            font: { family: 'Space Grotesk', size: 10, weight: '700' }
           }
         }
       }
@@ -1707,7 +1707,7 @@ function renderDrillDistributionChart(drillStats) {
       datasets: [{
         data: drillStats.map(d => d.duration),
         backgroundColor: colors,
-        borderColor: '#0f1016',
+        borderColor: '#02040a',
         borderWidth: 2,
         hoverOffset: 4
       }]
@@ -1724,16 +1724,16 @@ function renderDrillDistributionChart(drillStats) {
           display: true,
           position: 'right',
           labels: {
-            color: '#9ca3af',
-            font: { family: 'Manrope', size: 10 },
+            color: '#94a3b8',
+            font: { family: 'Manrope', size: 10, weight: '600' },
             padding: 8,
             boxWidth: 10
           }
         },
         tooltip: {
-          backgroundColor: 'rgba(14, 16, 22, 0.95)',
+          backgroundColor: 'rgba(10, 16, 32, 0.95)',
           titleColor: '#ffffff',
-          bodyColor: '#9ca3af',
+          bodyColor: '#94a3b8',
           borderColor: 'rgba(255, 107, 0, 0.25)',
           borderWidth: 1,
           cornerRadius: 8,
